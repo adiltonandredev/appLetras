@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const role = await getCurrentRole(session.user.id);
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-sacred-bg">
       <Sidebar role={role} />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar user={session.user} role={role} />

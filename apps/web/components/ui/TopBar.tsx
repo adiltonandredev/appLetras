@@ -31,7 +31,7 @@ export function TopBar({ user, role }: TopBarProps) {
   }
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
+    <header className="h-14 bg-white/95 backdrop-blur-sm border-b border-gold-200/30 flex items-center justify-between px-6 shrink-0 shadow-sm">
       {/* Left side — breadcrumb placeholder */}
       <div className="flex items-center gap-2" />
 
@@ -56,29 +56,29 @@ export function TopBar({ user, role }: TopBarProps) {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gold-50 transition-colors border border-gold-100/50"
           >
             {/* Avatar */}
             {avatarUrl ? (
               <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs font-bold">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-300 to-gold-500 text-brand-900 flex items-center justify-center text-xs font-bold">
                 {initials(name)}
               </div>
             )}
 
             <div className="hidden sm:block text-left">
               <p className="text-sm font-semibold text-gray-900 leading-none">{name.split(' ')[0]}</p>
-              <p className="text-xs font-medium mt-0.5" style={{ color: ROLE_COLORS[role] }}>
+              <p className="text-xs font-medium mt-0.5 text-gold-600">
                 {ROLE_LABELS[role]}
               </p>
             </div>
 
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-gold-500" />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-modal border border-gray-100 py-1 z-50">
+            <div className="absolute right-0 top-full mt-1 w-52 bg-white/97 backdrop-blur-sm rounded-xl shadow-modal border border-gold-200/50 py-1 z-50">
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>

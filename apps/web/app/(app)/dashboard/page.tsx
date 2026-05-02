@@ -53,25 +53,25 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="font-serif text-4xl font-black text-brand-900">
           Bom dia, {userName}! 👋
         </h1>
-        <p className="text-gray-500 mt-1">Confira o que está acontecendo no seu repertório.</p>
+        <p className="text-gray-500 mt-2 text-lg">Confira o que está acontecendo no seu repertório.</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {stats.map((stat) => (
-          <div key={stat.label} className="card p-5 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+          <div key={stat.label} className="card p-6 flex flex-col items-start gap-4 border-l-4 border-gold-400 hover:shadow-lg transition-shadow">
+            <div className={`w-14 h-14 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+              <stat.icon className={`w-7 h-7 ${stat.color}`} />
             </div>
             <div>
               <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-sm text-gray-500">{stat.label}</p>
+              <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -80,8 +80,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent repertories */}
         <div className="card">
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Repertórios Recentes</h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <h2 className="font-serif text-xl font-bold text-brand-900">Repertórios Recentes</h2>
             <div className="flex items-center gap-2">
               <Link href="/repertorios/novo" className="btn-primary py-1.5 px-3 text-xs">
                 <Plus className="w-3.5 h-3.5" /> Novo
@@ -127,8 +127,8 @@ export default async function DashboardPage() {
 
         {/* Recent songs */}
         <div className="card">
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Músicas Recentes</h2>
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <h2 className="font-serif text-xl font-bold text-brand-900">Músicas Recentes</h2>
             <div className="flex items-center gap-2">
               {can(role, 'songs:create') && (
                 <Link href="/musicas/nova" className="btn-primary py-1.5 px-3 text-xs">

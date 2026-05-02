@@ -45,19 +45,20 @@ export function Sidebar({ role }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'relative flex flex-col bg-brand-600 text-white transition-all duration-300 shrink-0',
+        'relative flex flex-col text-white transition-all duration-300 shrink-0',
+        'bg-gradient-to-b from-brand-900 to-brand-800',
         sidebarOpen ? 'w-60' : 'w-16'
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center shrink-0 border border-white/20">
-          <Music className="w-4 h-4 text-white" />
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-gold-500/20">
+        <div className="w-9 h-9 bg-gradient-to-br from-gold-400 to-gold-500 rounded-xl flex items-center justify-center shrink-0 border border-gold-300/50 shadow-lg">
+          <Music className="w-5 h-5 text-brand-900" />
         </div>
         {sidebarOpen && (
           <div className="overflow-hidden">
-            <p className="font-bold text-sm leading-none">Repertório</p>
-            <p className="text-blue-200 text-xs mt-0.5">Litúrgico</p>
+            <p className="font-serif font-black text-sm leading-none">APPLetras</p>
+            <p className="text-gold-300 text-xs mt-0.5 font-medium">Litúrgica</p>
           </div>
         )}
       </div>
@@ -76,7 +77,7 @@ export function Sidebar({ role }: SidebarProps) {
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors group',
                 isActive
-                  ? 'bg-white/15 text-white'
+                  ? 'bg-gold-400/20 text-white border-l-2 border-gold-400'
                   : 'text-blue-100 hover:bg-white/10 hover:text-white'
               )}
               title={!sidebarOpen ? item.label : undefined}
@@ -97,12 +98,12 @@ export function Sidebar({ role }: SidebarProps) {
       {/* Toggle */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-brand-600 border border-white/20 rounded-full flex items-center justify-center hover:bg-brand-500 transition-colors z-10"
+        className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-gold-400 to-gold-500 border-2 border-gold-300 rounded-full flex items-center justify-center hover:shadow-lg transition-all z-10"
         aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
       >
         {sidebarOpen
-          ? <ChevronLeft className="w-3.5 h-3.5 text-white" />
-          : <ChevronRight className="w-3.5 h-3.5 text-white" />}
+          ? <ChevronLeft className="w-3.5 h-3.5 text-brand-900" />
+          : <ChevronRight className="w-3.5 h-3.5 text-brand-900" />}
       </button>
     </aside>
   );

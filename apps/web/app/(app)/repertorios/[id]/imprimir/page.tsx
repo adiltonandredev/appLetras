@@ -35,7 +35,7 @@ export default async function PrintRepertoryPage({ params, searchParams }: Props
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{`${repertory.title} — Repertório Litúrgico`}</title>
+        <title>{`${repertory.title} — APPLetras`}</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
@@ -47,7 +47,7 @@ export default async function PrintRepertoryPage({ params, searchParams }: Props
             padding: 20mm 18mm;
           }
           .header {
-            border-bottom: 2px solid #1e3a5f;
+            border-bottom: 3px solid #C9A84C;
             padding-bottom: 12px;
             margin-bottom: 20px;
           }
@@ -229,7 +229,7 @@ export default async function PrintRepertoryPage({ params, searchParams }: Props
 
         {/* Footer */}
         <div className="footer">
-          <span>Repertório Litúrgico</span>
+          <span>APPLetras</span>
           <span>Impresso em {new Date().toLocaleDateString('pt-BR')}</span>
         </div>
 
