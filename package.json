@@ -2,7 +2,7 @@
   "name": "repertorio-liturgico",
   "version": "1.0.0",
   "private": true,
-  "description": "Plataforma de Gestão de Repertório Litúrgico — Monorepo",
+  "description": "Repertorio Liturgico Monorepo",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -10,18 +10,9 @@
     "dev:mobile": "turbo run dev --filter=mobile",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "clean": "turbo run clean && rm -rf node_modules",
-    "supabase:setup": "bash scripts/setup-supabase.sh",
-    "supabase:reset": "bash scripts/reset-db.sh",
-    "supabase:start": "supabase start",
-    "supabase:stop": "supabase stop",
-    "supabase:studio": "supabase studio",
-    "supabase:push": "supabase db push",
-    "supabase:pull": "supabase db pull",
-    "supabase:diff": "supabase db diff --use-migra"
+    "clean": "turbo run clean"
   },
   "devDependencies": {
-    "next": "14.2.0",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0",
     "@types/node": "^20.0.0",
