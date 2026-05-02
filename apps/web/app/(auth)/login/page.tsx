@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Entrar' };
 
 export default function LoginPage() {
@@ -113,10 +114,4 @@ export default function LoginPage() {
             Ao entrar, você concorda com nossos{' '}
             <a href="#" className="text-brand-600 hover:underline">Termos de Uso</a>
             {' '}e{' '}
-            <a href="#" className="text-brand-600 hover:underline">Política de Privacidade</a>.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+            <a href="#" className="text-brand-600 hover:und
