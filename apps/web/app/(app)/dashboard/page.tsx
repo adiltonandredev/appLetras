@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { CelebrationType } from '@rl/types';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentRole } from '@/lib/auth/permissions';
 import { can } from '@rl/utils';
@@ -108,7 +109,7 @@ export default async function DashboardPage() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{CELEBRATION_ICONS[(r.celebration as any) ?? 'outro']}</span>
+                  <span className="text-xl">{CELEBRATION_ICONS[((r.celebration || 'outro') as CelebrationType)]}</span>
                   <div>
                     <p className="text-sm font-medium text-gray-900 group-hover:text-brand-600 transition-colors">
                       {r.title}
