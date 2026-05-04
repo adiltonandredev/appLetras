@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { LyricsRenderer } from './LyricsRenderer';
 
 interface SongDetailProps {
   song: Song & { creator: any };
@@ -188,9 +189,7 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
 
         <div className="p-6">
           {tab === 'lyrics' ? (
-            <pre className="text-gray-700 whitespace-pre-wrap font-sans text-base leading-relaxed">
-              {song.lyrics}
-            </pre>
+            <LyricsRenderer lyrics={song.lyrics} />
           ) : song.chords ? (
             <pre className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
               {song.chords}

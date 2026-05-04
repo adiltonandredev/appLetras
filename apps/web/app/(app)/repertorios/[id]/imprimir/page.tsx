@@ -5,6 +5,39 @@ import { CELEBRATION_LABELS, CELEBRATION_ICONS, formatDate } from '@rl/utils';
 
 export const metadata: Metadata = { title: 'Imprimir Repertório' };
 
+const SECTION_RE = /^\[(Refrão|Refrao|REFRÃO|Estrofe\s*\d*|Verso\s*\d*|Ponte|Pré-Refrão|Pre-Refrão|Coda|Intro|Final|Bridge)\]$/i;
+
+function lyricsToHtml(lyrics: string): string {
+  if (!lyrics) return '';
+  const lines = lyrics.split('\n');
+  let html = '';
+  let inChorus = false;
+  let inBridge = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (SECTION_RE.test(trimmed)) {
+      const inner = trimmed.slice(1, -1);
+      const lower = inner.toLowerCase();
+      inChorus = lower.includes('refrão') || lower.includes('refrao');
+      inBridge = lower.includes('ponte') || lower.includes('bridge') || lower.includes('pré') || lower.includes('pre');
+      const cls = inChorus ? 'section-chorus' : inBridge ? 'section-bridge' : 'section-verse';
+      html += `<span class="section-label ${cls}">${inner}</span>\n`;
+    } else if (inChorus) {
+      html += `<strong>${escapeHtml(line)}</strong>\n`;
+    } else if (inBridge) {
+      html += `<em>${escapeHtml(line)}</em>\n`;
+    } else {
+      html += `${escapeHtml(line)}\n`;
+    }
+  }
+  return html;
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 interface Props { params: { id: string }; searchParams: { pdf?: string } }
 
 export default async function PrintRepertoryPage({ params, searchParams }: Props) {
@@ -127,7 +160,24 @@ export default async function PrintRepertoryPage({ params, searchParams }: Props
             white-space: pre-wrap;
             line-height: 1.65;
             color: #333;
+            font-family: 'Georgia', serif;
           }
+          .lyrics strong { color: #1a1a1a; font-weight: bold; }
+          .lyrics em { color: #555; font-style: italic; }
+          .section-label {
+            display: inline-block;
+            font-size: 7.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 1px 8px;
+            border-radius: 20px;
+            margin-top: 10px;
+            margin-bottom: 3px;
+          }
+          .section-chorus { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+          .section-bridge { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+          .section-verse { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
           .chords {
             font-family: 'Courier New', monospace;
             font-size: 9.5pt;
@@ -219,7 +269,7 @@ export default async function PrintRepertoryPage({ params, searchParams }: Props
               {song.chords ? (
                 <pre className="chords">{song.chords}</pre>
               ) : song.lyrics ? (
-                <pre className="lyrics">{song.lyrics}</pre>
+                <pre className="lyrics" dangerouslySetInnerHTML={{ __html: lyricsToHtml(song.lyrics) }} />
               ) : (
                 <p style={{ color: '#aaa', fontSize: '9pt', fontStyle: 'italic' }}>Letra não cadastrada.</p>
               )}

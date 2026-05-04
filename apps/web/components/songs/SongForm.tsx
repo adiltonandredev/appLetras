@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { createSong, updateSong } from '@rl/api-client';
 import { KEY_NOTES } from '@rl/utils';
 import type { LiturgicalCategory, Song } from '@rl/types';
-import { Save, Send, Loader2, Plus, X } from 'lucide-react';
+import { Save, Send, Loader2, Plus, X, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 const schema = z.object({
@@ -34,11 +34,22 @@ interface SongFormProps {
   song?: Song;
 }
 
+const SECTION_MARKERS = [
+  { label: '♪ Refrão', value: '[Refrão]', color: 'bg-gold-400/20 text-gold-600 border border-gold-400/40 hover:bg-gold-400/30' },
+  { label: 'Estrofe', value: '[Estrofe 1]', color: 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200' },
+  { label: 'Ponte', value: '[Ponte]', color: 'bg-purple-100 text-purple-600 border border-purple-200 hover:bg-purple-200' },
+  { label: 'Pré-Refrão', value: '[Pré-Refrão]', color: 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100' },
+  { label: 'Intro', value: '[Intro]', color: 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200' },
+  { label: 'Final', value: '[Final]', color: 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200' },
+];
+
 export function SongForm({ categories, mode, song }: SongFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [tagInput, setTagInput] = useState('');
   const [activeTab, setActiveTab] = useState<'lyrics' | 'chords'>('lyrics');
+  const [showHint, setShowHint] = useState(false);
+  const lyricsRef = useRef<HTMLTextAreaElement | null>(null);
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -57,33 +68,58 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
     },
   });
 
+  const { ref: lyricsFormRef, ...lyricsRest } = register('lyrics');
+
   const tags = watch('tags') ?? [];
   const selectedCategories = watch('category_ids') ?? [];
 
   function addTag() {
     const trimmed = tagInput.trim().toLowerCase();
-    if (trimmed && !tags.includes(trimmed)) {
+    if (trimmed && \!tags.includes(trimmed)) {
       setValue('tags', [...tags, trimmed]);
     }
     setTagInput('');
   }
 
   function removeTag(tag: string) {
-    setValue('tags', tags.filter(t => t !== tag));
+    setValue('tags', tags.filter(t => t \!== tag));
   }
 
   function toggleCategory(id: number) {
     if (selectedCategories.includes(id)) {
-      setValue('category_ids', selectedCategories.filter(c => c !== id));
+      setValue('category_ids', selectedCategories.filter(c => c \!== id));
     } else {
       setValue('category_ids', [...selectedCategories, id]);
     }
   }
 
+  function insertMarker(marker: string) {
+    const textarea = lyricsRef.current;
+    if (\!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const current = textarea.value;
+
+    // Add newline before marker if not at the beginning
+    const prefix = start > 0 && current[start - 1] \!== '\n' ? '\n' : '';
+    const suffix = '\n';
+
+    const newValue = current.slice(0, start) + prefix + marker + suffix + current.slice(end);
+    setValue('lyrics', newValue, { shouldValidate: true });
+
+    // Restore focus and set cursor after the inserted marker
+    setTimeout(() => {
+      textarea.focus();
+      const newPos = start + prefix.length + marker.length + suffix.length;
+      textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  }
+
   async function onSubmit(data: FormData, submitForReview = false) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (\!user) return;
 
       const payload = {
         ...data,
@@ -94,14 +130,14 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
         const created = await createSong(supabase, payload, user.id);
         if (submitForReview) {
           await supabase.from('songs').update({ status: 'pending' }).eq('id', created.id);
-          toast.success('Música enviada para aprovação!');
+          toast.success('Música enviada para aprovação\!');
         } else {
-          toast.success('Música salva como rascunho!');
+          toast.success('Música salva como rascunho\!');
         }
         router.push(`/musicas/${created.id}`);
       } else if (song) {
         await updateSong(supabase, song.id, payload, user.id);
-        toast.success('Música atualizada!');
+        toast.success('Música atualizada\!');
         router.push(`/musicas/${song.id}`);
       }
     } catch (error: any) {
@@ -203,12 +239,50 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
         </div>
 
         {activeTab === 'lyrics' && (
-          <div>
+          <div className="space-y-2">
+            {/* Section marker buttons */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-gray-400 font-medium shrink-0">Inserir seção:</span>
+                {SECTION_MARKERS.map((m) => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => insertMarker(m.value)}
+                    className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${m.color}`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setShowHint(h => \!h)}
+                  className="ml-auto text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Como funciona?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </div>
+
+              {showHint && (
+                <div className="bg-brand-50 border border-brand-100 rounded-lg p-3 text-xs text-brand-800 space-y-1">
+                  <p className="font-semibold">Como funciona a formatação de seções:</p>
+                  <p>Clique nos botões acima para inserir marcadores de seção (ex: <code className="bg-white px-1 rounded">[Refrão]</code>) antes de cada parte da música.</p>
+                  <p>Na visualização, o <strong>Refrão aparece em negrito</strong> com destaque dourado, estrofes em texto normal e pontes em itálico.</p>
+                  <p className="text-brand-600">Dica: posicione o cursor no local desejado antes de clicar no botão de seção.</p>
+                </div>
+              )}
+            </div>
+
             <textarea
-              {...register('lyrics')}
-              rows={14}
+              {...lyricsRest}
+              ref={(el) => {
+                lyricsFormRef(el);
+                lyricsRef.current = el;
+              }}
+              rows={16}
               className="input font-mono text-sm resize-none"
-              placeholder="Cole ou digite a letra aqui..."
+              placeholder={"[Estrofe 1]\nCole ou digite a letra aqui...\n\n[Refrão]\nO refrão aparecerá em negrito na visualização..."}
             />
             {errors.lyrics && <p className="text-red-500 text-xs mt-1">{errors.lyrics.message}</p>}
           </div>
