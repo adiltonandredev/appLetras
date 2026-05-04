@@ -75,19 +75,19 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
 
   function addTag() {
     const trimmed = tagInput.trim().toLowerCase();
-    if (trimmed && \!tags.includes(trimmed)) {
+    if (trimmed && !tags.includes(trimmed)) {
       setValue('tags', [...tags, trimmed]);
     }
     setTagInput('');
   }
 
   function removeTag(tag: string) {
-    setValue('tags', tags.filter(t => t \!== tag));
+    setValue('tags', tags.filter(t => t !== tag));
   }
 
   function toggleCategory(id: number) {
     if (selectedCategories.includes(id)) {
-      setValue('category_ids', selectedCategories.filter(c => c \!== id));
+      setValue('category_ids', selectedCategories.filter(c => c !== id));
     } else {
       setValue('category_ids', [...selectedCategories, id]);
     }
@@ -95,14 +95,14 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
 
   function insertMarker(marker: string) {
     const textarea = lyricsRef.current;
-    if (\!textarea) return;
+    if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const current = textarea.value;
 
     // Add newline before marker if not at the beginning
-    const prefix = start > 0 && current[start - 1] \!== '\n' ? '\n' : '';
+    const prefix = start > 0 && current[start - 1] !== '\n' ? '\n' : '';
     const suffix = '\n';
 
     const newValue = current.slice(0, start) + prefix + marker + suffix + current.slice(end);
@@ -119,7 +119,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
   async function onSubmit(data: FormData, submitForReview = false) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (\!user) return;
+      if (!user) return;
 
       const payload = {
         ...data,
@@ -130,14 +130,14 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
         const created = await createSong(supabase, payload, user.id);
         if (submitForReview) {
           await supabase.from('songs').update({ status: 'pending' }).eq('id', created.id);
-          toast.success('Música enviada para aprovação\!');
+          toast.success('Música enviada para aprovação!');
         } else {
-          toast.success('Música salva como rascunho\!');
+          toast.success('Música salva como rascunho!');
         }
         router.push(`/musicas/${created.id}`);
       } else if (song) {
         await updateSong(supabase, song.id, payload, user.id);
-        toast.success('Música atualizada\!');
+        toast.success('Música atualizada!');
         router.push(`/musicas/${song.id}`);
       }
     } catch (error: any) {
@@ -256,7 +256,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
                 ))}
                 <button
                   type="button"
-                  onClick={() => setShowHint(h => \!h)}
+                  onClick={() => setShowHint(h => !h)}
                   className="ml-auto text-gray-400 hover:text-gray-600 transition-colors"
                   title="Como funciona?"
                 >

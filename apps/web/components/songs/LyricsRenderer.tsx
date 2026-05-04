@@ -54,13 +54,13 @@ function parseLyrics(lyrics: string): LyricsBlock[] {
 }
 
 export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
-  if (\!lyrics) return null;
+  if (!lyrics) return null;
 
   const blocks = parseLyrics(lyrics);
-  const hasMarkers = blocks.some(b => b.header \!== null);
+  const hasMarkers = blocks.some(b => b.header !== null);
 
   // If no markers, just render as plain pre
-  if (\!hasMarkers) {
+  if (!hasMarkers) {
     return (
       <pre className={clsx('text-gray-700 whitespace-pre-wrap font-sans text-base leading-relaxed', className)}>
         {lyrics}
@@ -82,7 +82,7 @@ export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
                 'inline-flex items-center gap-1.5 mb-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider',
                 isChorus && 'bg-gold-400/20 text-gold-600 border border-gold-400/40',
                 isBridge && 'bg-purple-100 text-purple-600 border border-purple-200',
-                \!isChorus && \!isBridge && 'bg-gray-100 text-gray-500 border border-gray-200',
+                !isChorus && !isBridge && 'bg-gray-100 text-gray-500 border border-gray-200',
               )}>
                 {isChorus && <span>♪</span>}
                 {block.header}
@@ -93,7 +93,7 @@ export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
                 'whitespace-pre-wrap font-sans leading-relaxed text-base',
                 isChorus && 'font-bold text-gray-900',
                 isBridge && 'italic text-gray-700',
-                \!isChorus && \!isBridge && 'text-gray-700',
+                !isChorus && !isBridge && 'text-gray-700',
                 isChorus && 'pl-3 border-l-2 border-gold-400',
               )}>
                 {content}
