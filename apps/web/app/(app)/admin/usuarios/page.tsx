@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentRole } from '@/lib/auth/permissions';
 import { can } from '@rl/utils';
+import { createServiceClient } from '@/lib/supabase/server';
 import { UsersAdminClient } from '@/components/admin/UsersAdminClient';
 
 export const metadata: Metadata = { title: 'Usuários — Admin' };
@@ -15,8 +16,10 @@ export default async function AdminUsersPage() {
   const role = await getCurrentRole(session.user.id);
   if (!can(role, 'users:view')) redirect('/musicas');
 
-  // Fetch all users with their roles
-  const { data: users } = await supabase
+  // Use service client to bypass RLS on admin queries
+  const adminClient = createServiceClient();
+
+  const { data: users } = await adminClient
     .from('users')
     .select(`
       id, full_name, email, avatar_url, created_at, last_login_at, is_active,
@@ -26,7 +29,7 @@ export default async function AdminUsersPage() {
     `)
     .order('created_at', { ascending: false });
 
-  const { data: roles } = await supabase
+  const { data: roles } = await adminClient
     .from('roles')
     .select('*')
     .order('level');
