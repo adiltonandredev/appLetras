@@ -6,7 +6,7 @@ import { can } from '@rl/utils';
 import type { UserRole } from '@rl/types';
 import {
   LayoutDashboard, Music, BookOpen, Users, Tag,
-  ClipboardCheck, Settings, ScrollText, ChevronLeft, ChevronRight,
+  ClipboardCheck, ScrollText, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore } from '@/stores/ui.store';
@@ -27,7 +27,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Usuários', href: '/admin/usuarios', icon: Users, permission: 'users:view' },
   { label: 'Categorias', href: '/admin/categorias', icon: Tag, permission: 'categories:create' },
   { label: 'Logs', href: '/admin/logs', icon: ScrollText, permission: 'admin:audit' },
-  { label: 'Configurações', href: '/admin/configuracoes', icon: Settings, permission: 'admin:settings' },
 ];
 
 interface SidebarProps {
