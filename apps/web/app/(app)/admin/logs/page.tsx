@@ -50,7 +50,7 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
   if (!session) redirect('/login');
 
   const role = await getCurrentRole(session.user.id);
-  if (!can(role, 'logs:view')) redirect('/musicas');
+  if (!can(role, 'admin:audit')) redirect('/musicas');
 
   const page = Math.max(1, parseInt(searchParams.page ?? '1'));
   const perPage = 50;

@@ -13,7 +13,7 @@ export default async function AdminCategoriesPage() {
   if (!session) redirect('/login');
 
   const role = await getCurrentRole(session.user.id);
-  if (!can(role, 'categories:manage')) redirect('/musicas');
+  if (!can(role, 'categories:create')) redirect('/musicas');
 
   const { data: categories } = await supabase
     .from('liturgical_categories')

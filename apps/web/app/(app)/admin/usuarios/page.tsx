@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
   if (!session) redirect('/login');
 
   const role = await getCurrentRole(session.user.id);
-  if (!can(role, 'users:manage')) redirect('/musicas');
+  if (!can(role, 'users:view')) redirect('/musicas');
 
   // Fetch all users with their roles
   const { data: users } = await supabase
