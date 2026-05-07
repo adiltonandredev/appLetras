@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +24,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { createClient } from '@/lib/supabase/client';
 import { createRepertory, updateRepertory, reorderRepertoryItems, addRepertoryItem, removeRepertoryItem } from '@rl/api-client';
-import { CELEBRATION_LABELS, KEY_NOTES } from '@rl/utils';
+import { KEY_NOTES } from '@rl/utils';
 import type { Repertory, Song, CelebrationType } from '@rl/types';
 import {
   GripVertical, Plus, X, Search, Save, Loader2,
@@ -52,6 +52,12 @@ interface RepertoryItem {
   position: number;
 }
 
+interface CelebrationTypeOption {
+  slug: string;
+  name: string;
+  icon: string;
+}
+
 interface RepertoryFormProps {
   songs: Song[];
   mode: 'create' | 'edit';
@@ -61,6 +67,17 @@ interface RepertoryFormProps {
 export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
   const router = useRouter();
   const supabase = createClient();
+
+  const [celebrationTypes, setCelebrationTypes] = useState<CelebrationTypeOption[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('celebration_types')
+      .select('slug, name, icon')
+      .eq('is_active', true)
+      .order('sort_order')
+      .then(({ data }) => { if (data) setCelebrationTypes(data); });
+  }, []);
 
   const [items, setItems] = useState<RepertoryItem[]>(
     (repertory?.items ?? []).map((i: any, idx) => ({
@@ -212,8 +229,10 @@ export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
             <label className="label">Tipo de Celebração</label>
             <select {...register('celebration')} className="input">
               <option value="">Selecionar...</option>
-              {Object.entries(CELEBRATION_LABELS).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
+              {celebrationTypes.map(ct => (
+                <option key={ct.slug} value={ct.slug}>
+                  {ct.icon} {ct.name}
+                </option>
               ))}
             </select>
           </div>

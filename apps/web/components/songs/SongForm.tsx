@@ -195,28 +195,41 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
 
       {/* Categories */}
       <div className="card p-6 space-y-3">
-        <h2 className="font-semibold text-gray-900 text-sm uppercase tracking-wide text-gray-400">
-          Categorias Litúrgicas
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => {
-            const selected = selectedCategories.includes(cat.id);
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => toggleCategory(cat.id)}
-                className={`badge text-xs py-1.5 px-3 cursor-pointer transition-colors ${
-                  selected
-                    ? 'bg-brand-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {cat.name}
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-sm uppercase tracking-wide text-gray-400">
+            Categorias Litúrgicas
+          </h2>
+          {selectedCategories.length > 0 && (
+            <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">
+              {selectedCategories.length} selecionada{selectedCategories.length > 1 ? 's' : ''}
+            </span>
+          )}
         </div>
+        {categories.length === 0 ? (
+          <p className="text-sm text-gray-400 italic">Nenhuma categoria cadastrada ainda.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat: any) => {
+              const selected = selectedCategories.includes(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`flex items-center gap-1.5 text-sm py-2 px-3.5 rounded-xl font-medium cursor-pointer transition-all border ${
+                    selected
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-brand-400 hover:text-brand-600'
+                  }`}
+                >
+                  {cat.icon && <span className="text-base leading-none">{cat.icon}</span>}
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <p className="text-xs text-gray-400">Selecione uma ou mais categorias para classificar a música.</p>
       </div>
 
       {/* Lyrics / Chords */}

@@ -48,12 +48,19 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
   async function handleRoleChange(userId: string, newRoleId: string) {
     setChangingRole(userId);
     try {
-      // Upsert role assignment
-      const { error } = await supabase
+      // Remove all existing role assignments for the user, then insert the new one
+      const { error: delError } = await supabase
         .from('user_role_assignments')
-        .upsert({ user_id: userId, role_id: newRoleId }, { onConflict: 'user_id' });
+        .delete()
+        .eq('user_id', userId);
 
-      if (error) throw error;
+      if (delError) throw delError;
+
+      const { error: insError } = await supabase
+        .from('user_role_assignments')
+        .insert({ user_id: userId, role_id: newRoleId });
+
+      if (insError) throw insError;
 
       const newRole = roles.find(r => r.id === newRoleId) ?? null;
       setUsers(prev => prev.map(u =>
