@@ -77,24 +77,12 @@ export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
 
         return (
           <div key={i}>
-            {block.header && (
-              <div className={clsx(
-                'inline-flex items-center gap-1.5 mb-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider',
-                isChorus && 'bg-gold-400/20 text-gold-600 border border-gold-400/40',
-                isBridge && 'bg-purple-100 text-purple-600 border border-purple-200',
-                !isChorus && !isBridge && 'bg-gray-100 text-gray-500 border border-gray-200',
-              )}>
-                {isChorus && <span>♪</span>}
-                {block.header}
-              </div>
-            )}
             {content && (
               <pre className={clsx(
                 'whitespace-pre-wrap font-sans leading-relaxed text-base',
-                isChorus && 'font-bold text-gray-900',
+                isChorus && 'font-bold text-gray-900 pl-3 border-l-2 border-gold-400',
                 isBridge && 'italic text-gray-700',
                 !isChorus && !isBridge && 'text-gray-700',
-                isChorus && 'pl-3 border-l-2 border-gold-400',
               )}>
                 {content}
               </pre>

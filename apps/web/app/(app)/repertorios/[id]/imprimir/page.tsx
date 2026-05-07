@@ -21,8 +21,7 @@ function lyricsToHtml(lyrics: string): string {
       const lower = inner.toLowerCase();
       inChorus = lower.includes('refrão') || lower.includes('refrao');
       inBridge = lower.includes('ponte') || lower.includes('bridge') || lower.includes('pré') || lower.includes('pre');
-      const cls = inChorus ? 'section-chorus' : inBridge ? 'section-bridge' : 'section-verse';
-      html += `<span class="section-label ${cls}">${inner}</span>\n`;
+      // Não exibe o título da seção, apenas aplica a formatação
     } else if (inChorus) {
       html += `<strong>${escapeHtml(line)}</strong>\n`;
     } else if (inBridge) {
