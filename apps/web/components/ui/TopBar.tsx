@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS, ROLE_COLORS } from '@rl/utils';
 import type { UserRole } from '@rl/types';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Bell, LogOut, User, Moon, Sun, ChevronDown } from 'lucide-react';
+import { Bell, LogOut, User, Moon, Sun, ChevronDown, Menu } from 'lucide-react';
 import { useUIStore } from '@/stores/ui.store';
 import { useState } from 'react';
 import { initials } from '@rl/utils';
@@ -17,7 +17,7 @@ interface TopBarProps {
 
 export function TopBar({ user, role }: TopBarProps) {
   const router = useRouter();
-  const { darkMode, toggleDarkMode } = useUIStore();
+  const { darkMode, toggleDarkMode, setSidebarOpen } = useUIStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const supabase = createClient();
@@ -32,8 +32,16 @@ export function TopBar({ user, role }: TopBarProps) {
 
   return (
     <header className="h-14 bg-white/95 backdrop-blur-sm border-b border-gold-200/30 flex items-center justify-between px-6 shrink-0 shadow-sm">
-      {/* Left side — breadcrumb placeholder */}
-      <div className="flex items-center gap-2" />
+      {/* Left side — hamburger (mobile) + breadcrumb placeholder */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden btn-ghost p-2 -ml-1"
+          aria-label="Abrir menu"
+        >
+          <Menu className="w-5 h-5 text-brand-700" />
+        </button>
+      </div>
 
       {/* Right side */}
       <div className="flex items-center gap-2">
