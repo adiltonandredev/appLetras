@@ -31,7 +31,7 @@ export function TopBar({ user, role }: TopBarProps) {
   }
 
   return (
-    <header className="h-14 bg-white/95 backdrop-blur-sm border-b border-gold-200/30 flex items-center justify-between px-6 shrink-0 shadow-sm">
+    <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6 shrink-0 shadow-sm relative z-10">
       {/* Left side — hamburger (mobile) + breadcrumb placeholder */}
       <div className="flex items-center gap-2">
         <button
@@ -86,7 +86,12 @@ export function TopBar({ user, role }: TopBarProps) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-52 bg-white/97 backdrop-blur-sm rounded-xl shadow-modal border border-gold-200/50 py-1 z-50">
+            <>
+              <div
+                className="fixed inset-0 z-[90]"
+                onClick={() => setMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-gray-200 py-1 z-[100]">
               <div className="px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
@@ -103,6 +108,7 @@ export function TopBar({ user, role }: TopBarProps) {
                 <LogOut className="w-4 h-4" /> Sair
               </button>
             </div>
+            </>
           )}
         </div>
       </div>
