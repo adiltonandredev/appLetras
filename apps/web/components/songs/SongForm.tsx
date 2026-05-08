@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
-import { createSong, updateSong } from '@rl/api-client';
+import { createSong, updateSong, submitSongForReview } from '@rl/api-client';
 import { KEY_NOTES } from '@rl/utils';
 import type { LiturgicalCategory, Song } from '@rl/types';
 import { Save, Send, Loader2, Plus, X, Info } from 'lucide-react';
@@ -200,7 +200,8 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
       if (mode === 'create') {
         const created = await createSong(supabase, payload, user.id);
         if (submitForReview) {
-          await supabase.from('songs').update({ status: 'pending' }).eq('id', created.id);
+          // Usa submitSongForReview que atualiza songs.status E cria o registro em song_approvals
+          await submitSongForReview(supabase, created.id, user.id);
           toast.success('Música enviada para aprovação!');
         } else {
           toast.success('Música salva como rascunho!');
@@ -208,7 +209,13 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
         router.push(`/musicas/${created.id}`);
       } else if (song) {
         await updateSong(supabase, song.id, payload, user.id);
-        toast.success('Música atualizada!');
+        if (submitForReview) {
+          // Edição + envio para revisão
+          await submitSongForReview(supabase, song.id, user.id);
+          toast.success('Música enviada para aprovação!');
+        } else {
+          toast.success('Música atualizada!');
+        }
         router.push(`/musicas/${song.id}`);
       }
     } catch (error: any) {
