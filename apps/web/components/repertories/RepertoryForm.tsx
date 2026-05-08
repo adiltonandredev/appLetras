@@ -58,13 +58,21 @@ interface CelebrationTypeOption {
   icon: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  icon?: string;
+}
+
 interface RepertoryFormProps {
   songs: Song[];
+  categories?: Category[];
   mode: 'create' | 'edit';
   repertory?: Repertory & { items?: RepertoryItem[] };
 }
 
-export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
+export function RepertoryForm({ songs, categories = [], mode, repertory }: RepertoryFormProps) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -89,6 +97,8 @@ export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
     }))
   );
   const [songSearch, setSongSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState<number | ''>('');
+  const [filterKey, setFilterKey] = useState('');
   const [saving, setSaving] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
@@ -153,11 +163,17 @@ export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
     );
   }
 
-  const filteredSongs = songs.filter(s =>
-    !songSearch ||
-    s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
-    (s.author ?? '').toLowerCase().includes(songSearch.toLowerCase())
-  );
+  const filteredSongs = songs.filter(s => {
+    const matchSearch = !songSearch ||
+      s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
+      (s.author ?? '').toLowerCase().includes(songSearch.toLowerCase());
+    const matchCategory = !filterCategory ||
+      (s as any).categories?.some((c: any) => c.id === filterCategory);
+    const matchKey = !filterKey || s.key_note === filterKey;
+    return matchSearch && matchCategory && matchKey;
+  });
+
+  const activeFilters = [filterCategory, filterKey].filter(Boolean).length;
 
   async function onSubmit(data: FormData) {
     setSaving(true);
@@ -263,51 +279,127 @@ export function RepertoryForm({ songs, mode, repertory }: RepertoryFormProps) {
 
         {/* Song picker */}
         <div className="lg:col-span-2 card p-4 space-y-3 self-start">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
-            Adicionar Músicas
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">
+              Adicionar Músicas
+            </h2>
+            {activeFilters > 0 && (
+              <button
+                type="button"
+                onClick={() => { setFilterCategory(''); setFilterKey(''); }}
+                className="text-xs text-brand-600 hover:underline font-medium"
+              >
+                Limpar filtros ({activeFilters})
+              </button>
+            )}
+          </div>
 
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="search"
               value={songSearch}
               onChange={e => setSongSearch(e.target.value)}
-              placeholder="Buscar música..."
+              placeholder="Buscar por título ou autor..."
               className="input pl-9 text-sm"
             />
           </div>
 
-          <div className="space-y-1 max-h-[480px] overflow-y-auto pr-1">
-            {filteredSongs.slice(0, 40).map(song => (
-              <button
-                key={song.id}
-                type="button"
-                onClick={() => addSong(song)}
-                className={clsx(
-                  'w-full flex items-center justify-between p-3 rounded-xl text-left text-sm transition-colors',
-                  items.some(i => i.song.id === song.id)
-                    ? 'bg-brand-50 text-brand-700 cursor-default'
-                    : 'hover:bg-gray-50 text-gray-700'
-                )}
+          {/* Filters */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Category filter */}
+            <div>
+              <select
+                value={filterCategory}
+                onChange={e => setFilterCategory(e.target.value ? Number(e.target.value) : '')}
+                className="input text-xs py-1.5"
               >
-                <div>
-                  <p className="font-medium truncate max-w-[160px]">{song.title}</p>
-                  {song.author && <p className="text-xs text-gray-400">{song.author}</p>}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {song.key_note && (
-                    <span className="text-xs text-gray-400 font-mono">{song.key_note}</span>
+                <option value="">🏷️ Categoria</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.icon ? `${cat.icon} ` : ''}{cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Key filter */}
+            <div>
+              <select
+                value={filterKey}
+                onChange={e => setFilterKey(e.target.value)}
+                className="input text-xs py-1.5"
+              >
+                <option value="">🎵 Tom</option>
+                {KEY_NOTES.map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Results count */}
+          <p className="text-xs text-gray-400">
+            {filteredSongs.length} música{filteredSongs.length !== 1 ? 's' : ''} encontrada{filteredSongs.length !== 1 ? 's' : ''}
+          </p>
+
+          {/* Song list */}
+          <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
+            {filteredSongs.slice(0, 50).map(song => {
+              const added = items.some(i => i.song.id === song.id);
+              return (
+                <button
+                  key={song.id}
+                  type="button"
+                  onClick={() => addSong(song)}
+                  className={clsx(
+                    'w-full flex items-center justify-between p-3 rounded-xl text-left text-sm transition-colors',
+                    added
+                      ? 'bg-brand-50 text-brand-700 cursor-default'
+                      : 'hover:bg-gray-50 text-gray-700'
                   )}
-                  {items.some(i => i.song.id === song.id)
-                    ? <span className="text-xs text-brand-500">✓</span>
-                    : <Plus className="w-4 h-4 text-gray-400" />
-                  }
-                </div>
-              </button>
-            ))}
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{song.title}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {song.author && (
+                        <span className="text-xs text-gray-400 truncate">{song.author}</span>
+                      )}
+                      {(song as any).categories?.slice(0, 2).map((c: any) => (
+                        <span key={c.id} className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+                          {c.icon ?? ''} {c.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    {song.key_note && (
+                      <span className="text-xs font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                        {song.key_note}
+                      </span>
+                    )}
+                    {added
+                      ? <span className="text-xs text-brand-500 font-bold">✓</span>
+                      : <Plus className="w-4 h-4 text-gray-400" />
+                    }
+                  </div>
+                </button>
+              );
+            })}
             {filteredSongs.length === 0 && (
-              <p className="text-xs text-gray-400 text-center py-6">Nenhuma música encontrada.</p>
+              <div className="py-8 text-center">
+                <p className="text-xs text-gray-400">Nenhuma música encontrada.</p>
+                {activeFilters > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setFilterCategory(''); setFilterKey(''); setSongSearch(''); }}
+                    className="text-xs text-brand-600 hover:underline mt-1"
+                  >
+                    Limpar todos os filtros
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -9,16 +9,22 @@ export default async function NewRepertoryPage() {
   await requireAuth();
 
   const supabase = createClient();
-  const { data: songs } = await supabase
-    .from('songs')
-    .select(`
-      id, title, author, key_note, bpm,
-      categories:song_categories(category:liturgical_categories(id, name, slug))
-    `)
-    .eq('status', 'approved')
-    .order('title');
+  const [songsResult, categoriesResult] = await Promise.all([
+    supabase
+      .from('songs')
+      .select(`
+        id, title, author, key_note, bpm,
+        categories:song_categories(category:liturgical_categories(id, name, slug, icon))
+      `)
+      .eq('status', 'approved')
+      .order('title'),
+    supabase
+      .from('liturgical_categories')
+      .select('id, name, slug, icon')
+      .order('sort_order'),
+  ]);
 
-  const normalizedSongs = (songs ?? []).map((s: any) => ({
+  const normalizedSongs = (songsResult.data ?? []).map((s: any) => ({
     ...s,
     categories: s.categories?.map((sc: any) => sc.category) ?? [],
   }));
@@ -31,7 +37,11 @@ export default async function NewRepertoryPage() {
           Monte a sequência de músicas para a sua celebração.
         </p>
       </div>
-      <RepertoryForm songs={normalizedSongs} mode="create" />
+      <RepertoryForm
+        songs={normalizedSongs}
+        categories={categoriesResult.data ?? []}
+        mode="create"
+      />
     </div>
   );
 }
