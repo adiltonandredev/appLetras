@@ -3,7 +3,10 @@ import type { CelebrationType } from '@rl/types';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentRole } from '@/lib/auth/permissions';
 import { can } from '@rl/utils';
-import { Music, BookOpen, ClipboardCheck, Plus, ArrowRight } from 'lucide-react';
+import {
+  Music, BookOpen, ClipboardCheck, Plus, ArrowRight,
+  Users, Tag, CalendarDays, User, ListMusic, PlusCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, timeAgo, CELEBRATION_ICONS } from '@rl/utils';
 
@@ -40,6 +43,91 @@ export default async function DashboardPage() {
       .limit(5),
   ]);
 
+  // Quick access links — role-aware
+  const quickLinks = [
+    {
+      label: 'Nova Música',
+      href: '/musicas/nova',
+      icon: PlusCircle,
+      color: 'text-brand-600',
+      bg: 'bg-brand-50',
+      border: 'border-brand-200',
+      show: can(role, 'songs:create'),
+    },
+    {
+      label: 'Novo Repertório',
+      href: '/repertorios/novo',
+      icon: ListMusic,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      show: true,
+    },
+    {
+      label: 'Músicas',
+      href: '/musicas',
+      icon: Music,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      show: true,
+    },
+    {
+      label: 'Repertórios',
+      href: '/repertorios',
+      icon: BookOpen,
+      color: 'text-purple-600',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      show: true,
+    },
+    {
+      label: 'Aprovações',
+      href: '/admin/aprovacoes',
+      icon: ClipboardCheck,
+      color: 'text-amber-600',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      show: can(role, 'songs:approve'),
+    },
+    {
+      label: 'Usuários',
+      href: '/admin/usuarios',
+      icon: Users,
+      color: 'text-rose-600',
+      bg: 'bg-rose-50',
+      border: 'border-rose-200',
+      show: can(role, 'users:view'),
+    },
+    {
+      label: 'Categorias',
+      href: '/admin/categorias',
+      icon: Tag,
+      color: 'text-teal-600',
+      bg: 'bg-teal-50',
+      border: 'border-teal-200',
+      show: can(role, 'categories:create'),
+    },
+    {
+      label: 'Celebrações',
+      href: '/admin/celebracoes',
+      icon: CalendarDays,
+      color: 'text-indigo-600',
+      bg: 'bg-indigo-50',
+      border: 'border-indigo-200',
+      show: can(role, 'categories:create'),
+    },
+    {
+      label: 'Meu Perfil',
+      href: '/perfil',
+      icon: User,
+      color: 'text-gray-600',
+      bg: 'bg-gray-100',
+      border: 'border-gray-200',
+      show: true,
+    },
+  ].filter(l => l.show);
+
   const stats = [
     { label: 'Músicas aprovadas', value: songsResult.count ?? 0, icon: Music, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Meus repertórios', value: repertoriesResult.count ?? 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -60,6 +148,29 @@ export default async function DashboardPage() {
           Bom dia, {userName}! 👋
         </h1>
         <p className="text-gray-500 mt-2 text-lg">Confira o que está acontecendo no seu repertório.</p>
+      </div>
+
+      {/* Quick access */}
+      <div>
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+          Acesso Rápido
+        </h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-9 gap-3">
+          {quickLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl border ${link.border} ${link.bg} hover:shadow-md hover:scale-105 transition-all group`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${link.bg} group-hover:scale-110 transition-transform`}>
+                <link.icon className={`w-5 h-5 ${link.color}`} />
+              </div>
+              <span className={`text-xs font-semibold text-center leading-tight ${link.color}`}>
+                {link.label}
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Stats */}
