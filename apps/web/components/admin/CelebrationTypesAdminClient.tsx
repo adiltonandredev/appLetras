@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Edit2, Trash2, Check, X, GripVertical, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,6 +36,7 @@ function slugify(text: string) {
 
 export function CelebrationTypesAdminClient({ types: initial }: Props) {
   const supabase = createClient();
+  const router = useRouter();
   const [types, setTypes] = useState(initial);
   const [creating, setCreating] = useState(false);
   const [newType, setNewType] = useState({ name: '', icon: '🎵' });
@@ -63,6 +65,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
       setNewType({ name: '', icon: '🎵' });
       setCreating(false);
       toast.success('Tipo de celebração criado.');
+      router.refresh();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     } finally {
@@ -86,6 +89,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
       ));
       setEditing(null);
       toast.success('Tipo atualizado.');
+      router.refresh();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     } finally {
@@ -105,6 +109,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
         t.id === type.id ? { ...t, is_active: !t.is_active } : t
       ));
       toast.success(type.is_active ? 'Tipo desativado.' : 'Tipo ativado.');
+      router.refresh();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     }
@@ -121,6 +126,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
       if (error) throw error;
       setTypes(prev => prev.filter(t => t.id !== type.id));
       toast.success('Tipo excluído.');
+      router.refresh();
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
     }
