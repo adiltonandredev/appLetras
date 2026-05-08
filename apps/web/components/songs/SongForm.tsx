@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,7 @@ import { KEY_NOTES } from '@rl/utils';
 import type { LiturgicalCategory, Song } from '@rl/types';
 import { Save, Send, Loader2, Plus, X, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { AutocompleteInput, type Suggestion } from '@/components/ui/AutocompleteInput';
 
 const schema = z.object({
   title: z.string().min(2, 'Título muito curto').max(200),
@@ -50,6 +51,76 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
   const [activeTab, setActiveTab] = useState<'lyrics' | 'chords'>('lyrics');
   const [showHint, setShowHint] = useState(false);
   const lyricsRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // ─── Autocomplete state ───────────────────────────────────────
+  const [titleSuggestions, setTitleSuggestions] = useState<Suggestion[]>([]);
+  const [authorSuggestions, setAuthorSuggestions] = useState<Suggestion[]>([]);
+  const [composerSuggestions, setComposerSuggestions] = useState<Suggestion[]>([]);
+  const [loadingTitle, setLoadingTitle] = useState(false);
+  const [loadingAuthor, setLoadingAuthor] = useState(false);
+  const [loadingComposer, setLoadingComposer] = useState(false);
+
+  const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  function debounce(key: string, fn: () => void, delay = 350) {
+    clearTimeout(debounceRef.current[key]);
+    debounceRef.current[key] = setTimeout(fn, delay);
+  }
+
+  const searchTitles = useCallback((q: string) => {
+    if (q.trim().length < 2) { setTitleSuggestions([]); return; }
+    setLoadingTitle(true);
+    debounce('title', async () => {
+      const { data } = await supabase
+        .from('songs')
+        .select('id, title, author, status')
+        .ilike('title', `%${q}%`)
+        .neq('id', song?.id ?? '00000000-0000-0000-0000-000000000000')
+        .limit(6);
+      setLoadingTitle(false);
+      if (!data) return;
+      setTitleSuggestions(data.map(s => ({
+        value: s.title,
+        sublabel: [s.author, s.status === 'approved' ? '✓ aprovada' : s.status === 'pending' ? '⏳ pendente' : '📝 rascunho'].filter(Boolean).join(' · '),
+        href: `/musicas/${s.id}`,
+        isDuplicate: true,
+      })));
+    });
+  }, [supabase, song?.id]);
+
+  const searchAuthors = useCallback((q: string) => {
+    if (q.trim().length < 2) { setAuthorSuggestions([]); return; }
+    setLoadingAuthor(true);
+    debounce('author', async () => {
+      const { data } = await supabase
+        .from('songs')
+        .select('author')
+        .ilike('author', `%${q}%`)
+        .not('author', 'is', null)
+        .limit(20);
+      setLoadingAuthor(false);
+      if (!data) return;
+      const unique = [...new Set(data.map(s => s.author).filter(Boolean))] as string[];
+      setAuthorSuggestions(unique.slice(0, 6).map(v => ({ value: v })));
+    });
+  }, [supabase]);
+
+  const searchComposers = useCallback((q: string) => {
+    if (q.trim().length < 2) { setComposerSuggestions([]); return; }
+    setLoadingComposer(true);
+    debounce('composer', async () => {
+      const { data } = await supabase
+        .from('songs')
+        .select('composer')
+        .ilike('composer', `%${q}%`)
+        .not('composer', 'is', null)
+        .limit(20);
+      setLoadingComposer(false);
+      if (!data) return;
+      const unique = [...new Set(data.map(s => s.composer).filter(Boolean))] as string[];
+      setComposerSuggestions(unique.slice(0, 6).map(v => ({ value: v })));
+    });
+  }, [supabase]);
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -157,7 +228,18 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="label">Título *</label>
-            <input {...register('title')} className="input" placeholder="Ex: Senhor, Tem Piedade" />
+            <AutocompleteInput
+              value={watch('title') ?? ''}
+              onChange={v => { setValue('title', v, { shouldValidate: true }); searchTitles(v); }}
+              suggestions={titleSuggestions}
+              loading={loadingTitle}
+              placeholder="Ex: Senhor, Tem Piedade"
+            />
+            {titleSuggestions.length > 0 && (
+              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                ⚠️ Músicas com título similar encontradas — verifique antes de criar.
+              </p>
+            )}
             {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
           </div>
 
@@ -169,11 +251,25 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Autor / Intérprete</label>
-              <input {...register('author')} className="input" placeholder="Ex: Comunidade Shalom" />
+              <AutocompleteInput
+                value={watch('author') ?? ''}
+                onChange={v => { setValue('author', v); searchAuthors(v); }}
+                onSelect={v => setValue('author', v)}
+                suggestions={authorSuggestions}
+                loading={loadingAuthor}
+                placeholder="Ex: Comunidade Shalom"
+              />
             </div>
             <div>
               <label className="label">Compositor</label>
-              <input {...register('composer')} className="input" placeholder="Ex: Pe. Zezinho" />
+              <AutocompleteInput
+                value={watch('composer') ?? ''}
+                onChange={v => { setValue('composer', v); searchComposers(v); }}
+                onSelect={v => setValue('composer', v)}
+                suggestions={composerSuggestions}
+                loading={loadingComposer}
+                placeholder="Ex: Pe. Zezinho"
+              />
             </div>
           </div>
 
