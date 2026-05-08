@@ -427,18 +427,30 @@ function SortableRepertoryItem({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={onToggleEdit}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+            title="Definir tom e observação"
+            className={clsx(
+              'p-1.5 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1',
+              isEditing
+                ? 'bg-brand-100 text-brand-700'
+                : item.custom_key
+                  ? 'bg-gold-400/20 text-gold-600 border border-gold-400/40'
+                  : 'text-gray-400 hover:text-brand-600 hover:bg-brand-50'
+            )}
           >
-            {isEditing ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {item.custom_key
+              ? <span className="font-mono text-xs">{item.custom_key}</span>
+              : <span className="font-mono text-xs opacity-60">Tom</span>
+            }
+            {isEditing ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           <button
             type="button"
             onClick={onRemove}
-            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500"
+            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -447,28 +459,37 @@ function SortableRepertoryItem({
 
       {/* Inline edit */}
       {isEditing && (
-        <div className="px-4 pb-4 pt-1 grid grid-cols-2 gap-3 bg-gray-50 border-t border-gray-100">
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">Tom customizado</label>
-            <select
-              value={item.custom_key ?? ''}
-              onChange={e => onChangeKey(e.target.value)}
-              className="input text-sm py-1.5"
-            >
-              <option value="">Padrão ({item.song.key_note ?? '—'})</option>
-              {KEY_NOTES.map(k => <option key={k} value={k}>{k}</option>)}
-            </select>
+        <div className="px-4 pb-4 pt-3 space-y-3 bg-gray-50 border-t border-gray-100">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">
+                🎵 Tom neste repertório
+              </label>
+              <select
+                value={item.custom_key ?? ''}
+                onChange={e => onChangeKey(e.target.value)}
+                className="input text-sm py-1.5"
+              >
+                <option value="">Tom da música ({item.song.key_note ?? 'não definido'})</option>
+                {KEY_NOTES.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">
+                📝 Observação
+              </label>
+              <input
+                type="text"
+                value={item.observations ?? ''}
+                onChange={e => onChangeObs(e.target.value)}
+                placeholder="Ex: intro 2x, só violão..."
+                className="input text-sm py-1.5"
+              />
+            </div>
           </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">Observação</label>
-            <input
-              type="text"
-              value={item.observations ?? ''}
-              onChange={e => onChangeObs(e.target.value)}
-              placeholder="Ex: intro 2x"
-              className="input text-sm py-1.5"
-            />
-          </div>
+          <p className="text-xs text-gray-400">
+            O tom aqui é exclusivo deste repertório e aparece apenas na impressão. Não altera o cadastro da música.
+          </p>
         </div>
       )}
     </div>
