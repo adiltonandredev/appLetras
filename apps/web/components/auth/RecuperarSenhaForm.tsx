@@ -18,7 +18,7 @@ export function RecuperarSenhaForm() {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${location.origin}/auth/redefinir-senha`,
+        redirectTo: `${location.origin}/auth/callback?redirect=/redefinir-senha`,
       });
 
       if (resetError) throw resetError;

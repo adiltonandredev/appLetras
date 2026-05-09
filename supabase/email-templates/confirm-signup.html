@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirme seu cadastro — APPLetras</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F3EF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F3EF;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#060F1C 0%,#1B3A6B 100%);padding:36px 40px;text-align:center;">
+              <div style="display:inline-block;width:56px;height:56px;background:linear-gradient(135deg,#E8C97A,#D4A84B);border-radius:14px;line-height:56px;text-align:center;margin-bottom:12px;">
+                <span style="font-size:28px;">🎵</span>
+              </div>
+              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">APPLetras</h1>
+              <p style="margin:4px 0 0;color:#D4A84B;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Litúrgica</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 12px;color:#060F1C;font-size:22px;font-weight:700;">Bem-vindo ao APPLetras! 🙏</h2>
+              <p style="margin:0 0 20px;color:#4B5563;font-size:15px;line-height:1.6;">
+                Obrigado por se cadastrar na plataforma de gestão de repertório litúrgico.
+                Confirme seu e-mail para ativar sua conta e começar a usar.
+              </p>
+
+              <!-- Button -->
+              <div style="text-align:center;margin:32px 0;">
+                <a href="{{ .ConfirmationURL }}"
+                   style="display:inline-block;background:linear-gradient(135deg,#D4A84B,#C9A84C);color:#060F1C;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:12px;letter-spacing:0.3px;">
+                  ✅ Confirmar meu e-mail
+                </a>
+              </div>
+
+              <p style="margin:0 0 8px;color:#6B7280;font-size:13px;">
+                Ou copie e cole o link abaixo no seu navegador:
+              </p>
+              <p style="margin:0 0 24px;word-break:break-all;font-size:12px;color:#9CA3AF;font-family:monospace;background:#F9FAFB;padding:10px;border-radius:8px;border:1px solid #E5E7EB;">
+                {{ .ConfirmationURL }}
+              </p>
+
+              <!-- Features -->
+              <div style="border-top:1px solid #E5E7EB;padding-top:24px;margin-top:8px;">
+                <p style="margin:0 0 12px;color:#374151;font-size:14px;font-weight:600;">Com o APPLetras você pode:</p>
+                <table cellpadding="0" cellspacing="0" width="100%">
+                  <tr>
+                    <td style="padding:6px 0;color:#4B5563;font-size:13px;">🎵 &nbsp;Cadastrar e organizar letras de músicas</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#4B5563;font-size:13px;">📋 &nbsp;Criar repertórios para missas e celebrações</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#4B5563;font-size:13px;">🖨️ &nbsp;Imprimir repertórios com cifras e letras</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#4B5563;font-size:13px;">👥 &nbsp;Colaborar com sua equipe de música</td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#F9FAFB;border-top:1px solid #E5E7EB;padding:24px 40px;text-align:center;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.6;">
+                APPLetras — Plataforma de Repertório Litúrgico<br/>
+                Se você não criou esta conta, pode ignorar este e-mail com segurança.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
