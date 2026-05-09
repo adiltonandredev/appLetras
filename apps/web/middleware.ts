@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/registro', '/recuperar-senha', '/auth'];
+const PUBLIC_ROUTES = ['/login', '/registro', '/recuperar-senha', '/redefinir-senha', '/auth'];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
