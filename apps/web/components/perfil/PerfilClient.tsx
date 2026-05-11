@@ -37,10 +37,10 @@ export function PerfilClient({ profile, role, roleLabel, songCount, repertoryCou
   const [fullName, setFullName] = useState(profile.full_name ?? '');
   const [saving, setSaving] = useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [showCurrent, setShowCurrent] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [pwSuccess, setPwSuccess] = useState(false);
 
@@ -76,13 +76,17 @@ export function PerfilClient({ profile, role, roleLabel, songCount, repertoryCou
       toast.error('A nova senha deve ter pelo menos 8 caracteres.');
       return;
     }
+    if (newPassword !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
     setChangingPw(true);
     setPwSuccess(false);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      setCurrentPassword('');
       setNewPassword('');
+      setConfirmPassword('');
       setPwSuccess(true);
       toast.success('Senha alterada com sucesso!');
     } catch (err: any) {
@@ -187,7 +191,7 @@ export function PerfilClient({ profile, role, roleLabel, songCount, repertoryCou
               </button>
             </div>
             {newPassword.length > 0 && (
-              <div className="mt-1.5 flex gap-1">
+              <div className="mt-1.5 flex items-center gap-1">
                 {[8, 12, 16].map((len, i) => (
                   <div key={len} className={clsx('h-1 flex-1 rounded-full transition-colors',
                     newPassword.length >= len
@@ -195,11 +199,48 @@ export function PerfilClient({ profile, role, roleLabel, songCount, repertoryCou
                       : 'bg-gray-200'
                   )} />
                 ))}
+                <span className="text-xs text-gray-400 ml-1 whitespace-nowrap">
+                  {newPassword.length >= 16 ? 'Forte' : newPassword.length >= 12 ? 'Boa' : newPassword.length >= 8 ? 'Fraca' : 'Muito fraca'}
+                </span>
               </div>
             )}
           </div>
+
+          <div>
+            <label className="label">Repetir nova senha</label>
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className={clsx('input pr-10',
+                  confirmPassword && confirmPassword !== newPassword && 'border-red-300 focus:ring-red-200',
+                  confirmPassword && confirmPassword === newPassword && 'border-emerald-400 focus:ring-emerald-100'
+                )}
+                placeholder="Repita a nova senha"
+                required
+              />
+              <button type="button" onClick={() => setShowConfirm(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {confirmPassword && confirmPassword !== newPassword && (
+              <p className="text-xs text-red-500 mt-1">As senhas não coincidem</p>
+            )}
+            {confirmPassword && confirmPassword === newPassword && newPassword.length >= 8 && (
+              <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Senhas conferem
+              </p>
+            )}
+          </div>
+
           <div className="flex justify-end">
-            <button type="submit" disabled={changingPw} className="btn-secondary">
+            <button
+              type="submit"
+              disabled={changingPw || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+              className="btn-secondary"
+            >
               {changingPw ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {changingPw ? 'Alterando...' : 'Alterar senha'}
             </button>
