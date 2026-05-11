@@ -114,14 +114,6 @@ export function LyricsFullscreen({ title, lyrics, onClose }: Props) {
           }
         </button>
 
-        {/* Fechar */}
-        <button
-          onClick={onClose}
-          title="Fechar"
-          style={{ background: dark ? '#c0392b' : '#e74c3c', border: 'none', borderRadius: 8, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
-        >
-          <X style={{ width: 18, height: 18, color: 'white' }} />
-        </button>
       </div>
 
       {/* ── Letra ── */}
