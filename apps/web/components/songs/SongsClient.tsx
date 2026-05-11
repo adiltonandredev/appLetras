@@ -54,7 +54,9 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
         </div>
         {canCreate && (
           <Link href="/musicas/nova" className="btn-primary">
-            <Plus className="w-4 h-4" /> Nova música
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nova música</span>
+            <span className="sm:hidden">Nova</span>
           </Link>
         )}
       </div>

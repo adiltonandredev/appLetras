@@ -69,26 +69,52 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
         {/* Back + actions */}
         <div className="flex items-center justify-between">
           <Link href="/repertorios" className="btn-ghost -ml-2">
-            <ArrowLeft className="w-4 h-4" /> Repertórios
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Repertórios</span>
           </Link>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {canEdit && (
-              <Link href={`/repertorios/${repertory.id}/editar`} className="btn-secondary">
-                <Edit2 className="w-4 h-4" /> Editar
+              <Link
+                href={`/repertorios/${repertory.id}/editar`}
+                className="btn-secondary px-2.5 py-2 sm:px-3"
+                title="Editar"
+              >
+                <Edit2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Editar</span>
               </Link>
             )}
-            <button onClick={() => setShowShare(true)} className="btn-secondary">
-              <Share2 className="w-4 h-4" /> Compartilhar
+            <button
+              onClick={() => setShowShare(true)}
+              className="btn-secondary px-2.5 py-2 sm:px-3"
+              title="Compartilhar"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Compartilhar</span>
             </button>
-            <button onClick={handlePrint} className="btn-secondary">
-              <Printer className="w-4 h-4" /> Imprimir
+            <button
+              onClick={handlePrint}
+              className="btn-secondary px-2.5 py-2 sm:px-3"
+              title="Imprimir"
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden sm:inline">Imprimir</span>
             </button>
-            <Link href={`/repertorios/${repertory.id}/imprimir?pdf=1`} className="btn-secondary" target="_blank">
-              <FileDown className="w-4 h-4" /> PDF
+            <Link
+              href={`/repertorios/${repertory.id}/imprimir?pdf=1`}
+              className="btn-secondary px-2.5 py-2 sm:px-3"
+              target="_blank"
+              title="Baixar PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">PDF</span>
             </Link>
             {canDelete && (
-              <button onClick={handleDelete} className="btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600">
+              <button
+                onClick={handleDelete}
+                className="btn-ghost px-2.5 py-2 text-red-500 hover:bg-red-50 hover:text-red-600"
+                title="Excluir"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             )}

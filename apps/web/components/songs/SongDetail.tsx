@@ -53,18 +53,20 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <Link href="/musicas" className="btn-ghost -ml-2">
-          <ArrowLeft className="w-4 h-4" /> Músicas
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Músicas</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {canSubmit && (
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary">
+            <button onClick={handleSubmit} disabled={submitting} className="btn-primary px-2.5 py-2 sm:px-3" title="Enviar para aprovação">
               <Send className="w-4 h-4" />
-              {submitting ? 'Enviando...' : 'Enviar para aprovação'}
+              <span className="hidden sm:inline">{submitting ? 'Enviando...' : 'Enviar para aprovação'}</span>
             </button>
           )}
           {canEdit && (
-            <Link href={`/musicas/${song.id}/editar`} className="btn-secondary">
-              <Edit2 className="w-4 h-4" /> Editar
+            <Link href={`/musicas/${song.id}/editar`} className="btn-secondary px-2.5 py-2 sm:px-3" title="Editar">
+              <Edit2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Editar</span>
             </Link>
           )}
         </div>

@@ -59,7 +59,9 @@ export function RepertoriesClient({ userId }: RepertoriesClientProps) {
           <p className="text-gray-500 text-sm mt-0.5">{data?.count ?? 0} repertório{data?.count !== 1 ? 's' : ''}</p>
         </div>
         <Link href="/repertorios/novo" className="btn-primary">
-          <Plus className="w-4 h-4" /> Novo repertório
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Novo repertório</span>
+          <span className="sm:hidden">Novo</span>
         </Link>
       </div>
 
