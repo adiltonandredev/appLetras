@@ -183,8 +183,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Stats — oculto no mobile */}
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {stats.map((stat) => (
           <div key={stat.label} className="card p-6 flex flex-col items-start gap-4 border-l-4 border-gold-400 hover:shadow-lg transition-shadow">
             <div className={`w-14 h-14 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
