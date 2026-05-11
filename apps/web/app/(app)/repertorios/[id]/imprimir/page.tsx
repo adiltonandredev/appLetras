@@ -13,35 +13,51 @@ function escapeHtml(t: string) {
   return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/** Converte letra em HTML — sem exibir rótulos de seção, com negrito no refrão */
 function lyricsToHtml(lyrics: string): string {
   if (!lyrics) return '';
   const lines = lyrics.split('\n');
-  let html = '';
+  const parts: string[] = [];
   let inChorus = false;
   let inBridge = false;
+  let blankCount = 0;
 
   for (const line of lines) {
     const trimmed = line.trim();
+
+    // Marcador de seção → apenas muda o estado, não renderiza
     if (SECTION_RE.test(trimmed)) {
-      const inner = trimmed.slice(1, -1);
-      const lower = inner.toLowerCase();
+      const lower = trimmed.slice(1, -1).toLowerCase();
       inChorus = lower.includes('refrão') || lower.includes('refrao');
       inBridge =
         lower.includes('ponte') || lower.includes('bridge') ||
         lower.includes('pré') || lower.includes('pre');
+      blankCount = 0;
+      continue;
+    }
 
-      // Exibe o rótulo da seção
-      const labelClass = inChorus ? 'section-chorus' : inBridge ? 'section-bridge' : 'section-verse';
-      html += `<span class="section-label ${labelClass}">${escapeHtml(inner)}</span>\n`;
-    } else if (inChorus) {
-      html += `<strong>${escapeHtml(line)}</strong>\n`;
+    // Linhas em branco — máximo 1 consecutiva
+    if (trimmed === '') {
+      if (blankCount < 1) { parts.push(''); blankCount++; }
+      continue;
+    }
+    blankCount = 0;
+
+    const escaped = escapeHtml(line);
+    if (inChorus) {
+      parts.push(`<strong>${escaped}</strong>`);
     } else if (inBridge) {
-      html += `<em>${escapeHtml(line)}</em>\n`;
+      parts.push(`<em>${escaped}</em>`);
     } else {
-      html += `${escapeHtml(line)}\n`;
+      parts.push(escaped);
     }
   }
-  return html;
+
+  // Remove linhas em branco no início/fim
+  while (parts.length && parts[0] === '') parts.shift();
+  while (parts.length && parts[parts.length - 1] === '') parts.pop();
+
+  return parts.join('\n');
 }
 
 interface Props { params: { id: string } }
@@ -56,7 +72,12 @@ export default async function PrintRepertoryPage({ params }: Props) {
       creator:users!created_by(full_name),
       items:repertory_items(
         id, position, custom_key, observations,
-        song:songs(id, title, author, composer, key_note, bpm, lyrics, chords)
+        song:songs(
+          id, title, author, composer, key_note, bpm, lyrics, chords,
+          categories:song_categories(
+            category:liturgical_categories(name, slug)
+          )
+        )
       )
     `)
     .eq('id', params.id)
@@ -65,9 +86,9 @@ export default async function PrintRepertoryPage({ params }: Props) {
   if (error || !repertory) notFound();
 
   const celebrationSlug: string = (repertory as any).celebration ?? '';
-  let celebrationName: string =
+  let celebrationName =
     CELEBRATION_LABELS[celebrationSlug as keyof typeof CELEBRATION_LABELS] ?? celebrationSlug;
-  let celebrationIcon: string =
+  let celebrationIcon =
     CELEBRATION_ICONS[celebrationSlug as keyof typeof CELEBRATION_ICONS] ?? '🎵';
 
   if (celebrationSlug && !CELEBRATION_LABELS[celebrationSlug as keyof typeof CELEBRATION_LABELS]) {
@@ -84,227 +105,235 @@ export default async function PrintRepertoryPage({ params }: Props) {
   );
 
   const css = `
-    /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Overlay (tela) ── */
+    /* ── Barra de controles (só na tela) ── */
+    #print-controls-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: #1e3a5f;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── Wrapper da tela ── */
     #print-overlay {
       position: fixed;
       inset: 0;
-      z-index: 9999;
-      background: #e8e8e8;
+      top: 44px;           /* abaixo da barra */
+      z-index: 200;
+      background: #c8c8c8;
       overflow-y: auto;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 60px 16px 40px;
+      justify-content: center;
+      padding: 20px 16px 40px;
       font-family: 'Georgia', 'Times New Roman', serif;
     }
 
-    /* ── Folha A4 (tela) ── */
+    /* ── Folha A4 — largura fixa, altura livre (paginação automática no print) ── */
     .a4-page {
       width: 210mm;
-      min-height: 297mm;
       background: white;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
-      padding: 10mm 10mm 10mm;
-      position: relative;
+      padding: 10mm 11mm 12mm;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.28);
     }
 
     /* ── Cabeçalho compacto ── */
-    .print-header {
-      border-bottom: 2.5px solid #C9A84C;
-      padding-bottom: 5px;
-      margin-bottom: 8px;
+    .rep-header {
       display: flex;
       align-items: baseline;
-      gap: 10px;
+      justify-content: space-between;
       flex-wrap: wrap;
+      gap: 6px;
+      border-bottom: 2px solid #C9A84C;
+      padding-bottom: 5px;
+      margin-bottom: 9px;
     }
-    .print-header h1 {
-      font-size: 13pt;
+    .rep-title {
+      font-size: 12pt;
       font-weight: bold;
       color: #1e3a5f;
       line-height: 1.2;
     }
-    .print-header-meta {
-      font-size: 7.5pt;
+    .rep-meta {
+      font-size: 7pt;
       color: #666;
       display: flex;
       gap: 10px;
-      flex-wrap: wrap;
       align-items: center;
-      flex: 1;
+      flex-wrap: wrap;
     }
-    .print-header-meta span { white-space: nowrap; }
-    .song-count-badge {
+    .rep-badge {
       background: #1e3a5f;
       color: white;
-      font-size: 7pt;
+      font-size: 6.5pt;
       font-weight: bold;
       padding: 1px 8px;
       border-radius: 20px;
-      white-space: nowrap;
     }
 
     /* ── Grid 2 colunas ── */
     .songs-grid {
       columns: 2;
-      column-gap: 7mm;
-      column-fill: balance;
+      column-gap: 0;
+      column-rule: 1px solid #d1d5db;
     }
 
-    /* ── Bloco de cada música ── */
+    /* ── Bloco de música ── */
     .song-block {
       break-inside: avoid;
       -webkit-column-break-inside: avoid;
       page-break-inside: avoid;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed #e0e0e0;
+      padding: 0 8mm 9px 0;
+      margin-bottom: 9px;
+      border-bottom: 1px dashed #e5e7eb;
     }
-    .song-block:last-child { border-bottom: none; }
+    .song-block:last-child { border-bottom: none; margin-bottom: 0; }
 
+    /* Segunda coluna: padding invertido */
+    .songs-grid .song-block:nth-child(odd) {
+      padding-left: 0;
+      padding-right: 8mm;
+    }
+
+    /* ── Cabeçalho da música ── */
     .song-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 5px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
-    .song-number {
+    .song-num {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       background: #1e3a5f;
       color: white;
-      font-size: 6.5pt;
+      font-size: 6pt;
       font-weight: bold;
-      min-width: 16px;
-      height: 16px;
+      min-width: 15px;
+      height: 15px;
       border-radius: 50%;
       flex-shrink: 0;
-      padding: 0 2px;
+      margin-top: 1px;
     }
     .song-title {
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-weight: bold;
       color: #1e3a5f;
       flex: 1;
-      line-height: 1.2;
+      line-height: 1.25;
     }
     .song-key {
       font-family: 'Courier New', monospace;
-      font-size: 7pt;
+      font-size: 6.5pt;
       font-weight: bold;
-      background: #eff6ff;
-      color: #1e3a5f;
+      background: #dbeafe;
+      color: #1e40af;
       padding: 0 4px;
       border-radius: 3px;
-      border: 1px solid #bfdbfe;
       white-space: nowrap;
+      border: 1px solid #bfdbfe;
+      line-height: 1.6;
     }
+
+    /* ── Categoria ── */
+    .song-category {
+      font-size: 6.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #C9A84C;
+      margin-bottom: 2px;
+      margin-left: 20px;
+    }
+
+    /* ── Autor ── */
     .song-author {
-      font-size: 7pt;
-      color: #888;
-      margin-bottom: 4px;
+      font-size: 6.5pt;
+      color: #9ca3af;
       font-style: italic;
+      margin-bottom: 4px;
+      margin-left: 20px;
+    }
+
+    /* ── Observação do item ── */
+    .song-obs {
+      font-size: 6.5pt;
+      color: #6b7280;
+      font-style: italic;
+      border-left: 2px solid #e5e7eb;
+      padding-left: 5px;
+      margin-bottom: 4px;
     }
 
     /* ── Cifras ── */
     .chords-block {
       font-family: 'Courier New', monospace;
-      font-size: 7.5pt;
+      font-size: 7pt;
       white-space: pre-wrap;
-      line-height: 1.55;
+      line-height: 1.5;
       color: #1e3a5f;
-      background: #f0f4ff;
-      border-left: 2.5px solid #1e3a5f;
-      padding: 4px 6px;
+      background: #eff6ff;
+      border-left: 2px solid #93c5fd;
+      padding: 3px 6px;
       border-radius: 0 3px 3px 0;
       margin-bottom: 4px;
     }
 
     /* ── Letra ── */
     .lyrics-block {
-      font-size: 8pt;
+      font-size: 9pt;
       white-space: pre-wrap;
-      line-height: 1.6;
-      color: #222;
+      line-height: 1.65;
+      color: #1a1a1a;
       font-family: 'Georgia', serif;
+      text-align: justify;
+      hyphens: auto;
     }
-    .lyrics-block strong { font-weight: 700; color: #111; }
-    .lyrics-block em    { font-style: italic; color: #555; }
-
-    .section-label {
-      display: inline-block;
-      font-size: 6pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 0 5px;
-      border-radius: 10px;
-      margin-bottom: 1px;
-      margin-top: 4px;
-      line-height: 1.6;
+    .lyrics-block strong {
+      font-weight: 700;
     }
-    .section-chorus { background: #fef3c7; color: #92400e; }
-    .section-bridge { background: #f3e8ff; color: #7e22ce; }
-    .section-verse  { background: #f3f4f6; color: #4b5563; }
-
-    .obs-block {
-      font-size: 6.5pt;
-      color: #777;
+    .lyrics-block em {
       font-style: italic;
-      border-left: 2px solid #e5e7eb;
-      padding-left: 5px;
-      margin-bottom: 3px;
+      color: #4b5563;
     }
 
     /* ── Rodapé ── */
-    .print-footer {
-      margin-top: 8px;
+    .rep-footer {
+      margin-top: 10px;
       padding-top: 5px;
-      border-top: 1px solid #ddd;
-      font-size: 7pt;
-      color: #aaa;
+      border-top: 1px solid #e5e7eb;
+      font-size: 6.5pt;
+      color: #9ca3af;
       display: flex;
       justify-content: space-between;
     }
 
-    /* ── Barra de controles (tela) ── */
-    #print-controls-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 10000;
-      background: #1e3a5f;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
-    /* ── Print media ── */
+    /* ── Impressão / PDF ── */
     @page {
       size: A4;
-      margin: 8mm 10mm 8mm;
+      margin: 10mm 11mm;
     }
     @media print {
-      body { background: white !important; }
+      html, body { background: white !important; }
+      #print-controls-bar { display: none !important; }
       #print-overlay {
         position: static !important;
         background: none !important;
         padding: 0 !important;
         display: block !important;
+        overflow: visible !important;
+        top: 0 !important;
       }
       .a4-page {
         width: 100% !important;
-        min-height: auto !important;
         box-shadow: none !important;
         padding: 0 !important;
       }
-      #print-controls-bar { display: none !important; }
-      .no-print { display: none !important; }
     }
   `;
 
@@ -312,16 +341,19 @@ export default async function PrintRepertoryPage({ params }: Props) {
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      <div id="print-overlay">
-        {/* Barra de controles — só na tela */}
-        <PrintControls />
+      {/* Barra de controles */}
+      <PrintControls />
 
-        {/* Folha A4 */}
+      {/* Área de pré-visualização */}
+      <div id="print-overlay">
         <div className="a4-page">
-          {/* Cabeçalho compacto */}
-          <div className="print-header">
-            <h1>{celebrationIcon} {repertory.title}</h1>
-            <div className="print-header-meta">
+
+          {/* Cabeçalho do repertório */}
+          <div className="rep-header">
+            <div className="rep-title">
+              {celebrationIcon} {repertory.title}
+            </div>
+            <div className="rep-meta">
               {celebrationName && <span>{celebrationName}</span>}
               {(repertory as any).event_date && (
                 <span>📅 {formatDate((repertory as any).event_date)}</span>
@@ -329,7 +361,7 @@ export default async function PrintRepertoryPage({ params }: Props) {
               {(repertory as any).community && (
                 <span>{(repertory as any).community}</span>
               )}
-              <span className="song-count-badge">
+              <span className="rep-badge">
                 {items.length} música{items.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -340,38 +372,47 @@ export default async function PrintRepertoryPage({ params }: Props) {
             {items.map((item: any, idx: number) => {
               const song = item.song;
               if (!song) return null;
+
               const displayKey = item.custom_key ?? song.key_note;
               const authorLine = [song.author, song.composer]
-                .filter(Boolean)
-                .join(' / ');
+                .filter(Boolean).join(' / ');
+
+              // Categoria: pega a primeira categoria associada à música
+              const categoryName: string =
+                song.categories?.[0]?.category?.name ?? '';
 
               return (
                 <div key={item.id} className="song-block">
                   {/* Título + tom */}
                   <div className="song-header">
-                    <span className="song-number">{idx + 1}</span>
+                    <span className="song-num">{idx + 1}</span>
                     <span className="song-title">{song.title}</span>
                     {displayKey && (
                       <span className="song-key">{displayKey}</span>
                     )}
                   </div>
 
-                  {/* Autor */}
+                  {/* Categoria litúrgica */}
+                  {categoryName && (
+                    <div className="song-category">{categoryName}</div>
+                  )}
+
+                  {/* Autor/compositor */}
                   {authorLine && (
                     <div className="song-author">{authorLine}</div>
                   )}
 
                   {/* Observação do item no repertório */}
                   {item.observations && (
-                    <div className="obs-block">{item.observations}</div>
+                    <div className="song-obs">{item.observations}</div>
                   )}
 
-                  {/* Cifras (sempre exibe se existir) */}
+                  {/* Cifras (se houver) */}
                   {song.chords && (
                     <pre className="chords-block">{song.chords}</pre>
                   )}
 
-                  {/* Letra (sempre exibe se existir) */}
+                  {/* Letra */}
                   {song.lyrics ? (
                     <pre
                       className="lyrics-block"
@@ -379,7 +420,7 @@ export default async function PrintRepertoryPage({ params }: Props) {
                     />
                   ) : (
                     !song.chords && (
-                      <p style={{ color: '#bbb', fontSize: '7pt', fontStyle: 'italic' }}>
+                      <p style={{ color: '#d1d5db', fontSize: '7pt', fontStyle: 'italic' }}>
                         Letra não cadastrada.
                       </p>
                     )
@@ -390,10 +431,11 @@ export default async function PrintRepertoryPage({ params }: Props) {
           </div>
 
           {/* Rodapé */}
-          <div className="print-footer">
+          <div className="rep-footer">
             <span>APPLetras — Repertório Litúrgico</span>
             <span>Impresso em {new Date().toLocaleDateString('pt-BR')}</span>
           </div>
+
         </div>
       </div>
     </>
