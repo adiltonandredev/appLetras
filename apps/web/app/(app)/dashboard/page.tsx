@@ -303,7 +303,7 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-3">
             {/* Instagram */}
             <a
-              href="https://instagram.com/adiltonandre"
+              href="https://instagram.com/adiltonandremcs"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
@@ -329,7 +329,7 @@ export default async function DashboardPage() {
 
             {/* WhatsApp */}
             <a
-              href="https://wa.me/5500000000000"
+              href="https://wa.me/5569999772514"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
