@@ -21,21 +21,31 @@ export default async function DashboardPage() {
   const userName = session.user.user_metadata?.full_name?.split(' ')[0] ?? 'usuário';
 
   // Load stats in parallel
+  const isAdmin = can(role, 'users:view'); // nível 4 — admin/master
+
   const [songsResult, repertoriesResult, pendingResult] = await Promise.all([
     supabase.from('songs').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
-    supabase.from('repertories').select('id', { count: 'exact', head: true })
-      .eq('created_by', session.user.id),
+    // Admin vê total do sistema; outros veem apenas os próprios
+    isAdmin
+      ? supabase.from('repertories').select('id', { count: 'exact', head: true })
+      : supabase.from('repertories').select('id', { count: 'exact', head: true }).eq('created_by', session.user.id),
     can(role, 'songs:approve')
       ? supabase.from('song_approvals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
       : Promise.resolve({ count: 0, error: null }),
   ]);
 
   const [recentRepertories, recentSongs] = await Promise.all([
-    supabase.from('repertories')
-      .select('id, title, celebration, event_date, created_at')
-      .eq('created_by', session.user.id)
-      .order('updated_at', { ascending: false })
-      .limit(5),
+    // Admin vê os mais recentes do sistema; outros veem os seus
+    isAdmin
+      ? supabase.from('repertories')
+          .select('id, title, celebration, event_date, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5)
+      : supabase.from('repertories')
+          .select('id, title, celebration, event_date, created_at')
+          .eq('created_by', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
     supabase.from('songs')
       .select('id, title, status, created_at, key_note')
       .eq('status', 'approved')
@@ -130,7 +140,7 @@ export default async function DashboardPage() {
 
   const stats = [
     { label: 'Músicas aprovadas', value: songsResult.count ?? 0, icon: Music, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Meus repertórios', value: repertoriesResult.count ?? 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: isAdmin ? 'Total de repertórios' : 'Meus repertórios', value: repertoriesResult.count ?? 0, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ...(can(role, 'songs:approve') ? [{
       label: 'Aguardando aprovação',
       value: (pendingResult as any).count ?? 0,
@@ -192,7 +202,7 @@ export default async function DashboardPage() {
         {/* Recent repertories */}
         <div className="card">
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h2 className="font-serif text-xl font-bold text-brand-900">Repertórios Recentes</h2>
+            <h2 className="font-serif text-xl font-bold text-brand-900">{isAdmin ? 'Últimos Repertórios' : 'Repertórios Recentes'}</h2>
             <div className="flex items-center gap-2">
               <Link href="/repertorios/novo" className="btn-primary py-1.5 px-3 text-xs">
                 <Plus className="w-3.5 h-3.5" /> Novo
