@@ -12,15 +12,14 @@ export async function getSongs(
   const from = (page - 1) * per_page;
   const to = from + per_page - 1;
 
+  // Quando há filtro de categoria, usa INNER JOIN para excluir músicas sem ela
+  const categoriesJoin = category_id
+    ? 'categories:song_categories!inner(category:liturgical_categories(*))'
+    : 'categories:song_categories(category:liturgical_categories(*))';
+
   let query = client
     .from('songs')
-    .select(`
-      *,
-      creator:users!created_by(id, full_name, avatar_url),
-      categories:song_categories(
-        category:liturgical_categories(*)
-      )
-    `, { count: 'exact' })
+    .select(`*, creator:users!created_by(id, full_name, avatar_url), ${categoriesJoin}`, { count: 'exact' })
     .range(from, to)
     .order('created_at', { ascending: false });
 
@@ -28,6 +27,7 @@ export async function getSongs(
   if (key_note) query = query.eq('key_note', key_note);
   if (created_by) query = query.eq('created_by', created_by);
   if (q) query = query.ilike('title', `%${q}%`);
+  if (category_id) query = query.eq('song_categories.category_id', category_id);
 
   const { data, error, count } = await query;
   if (error) throw error;
