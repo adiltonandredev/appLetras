@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { getCurrentRole } from '@/lib/auth/permissions';
 import { can, formatDateTime } from '@rl/utils';
+import { LogsFilterSelect } from '@/components/admin/LogsFilterSelect';
 
 export const metadata: Metadata = { title: 'Logs de Auditoria — Admin' };
 
 const ACTION_LABELS: Record<string, string> = {
-  song_created:   'Música criada',
-  song_updated:   'Música editada',
-  song_deleted:   'Música excluída',
-  song_submitted: 'Música enviada para aprovação',
-  song_approved:  'Música aprovada',
-  song_rejected:  'Música reprovada',
-  song_revision:  'Revisão solicitada',
+  song_created:      'Música criada',
+  song_updated:      'Música editada',
+  song_deleted:      'Música excluída',
+  song_submitted:    'Música enviada para aprovação',
+  song_approved:     'Música aprovada',
+  song_rejected:     'Música reprovada',
+  song_revision:     'Revisão solicitada',
   repertory_created: 'Repertório criado',
   repertory_updated: 'Repertório editado',
   repertory_deleted: 'Repertório excluído',
@@ -38,13 +39,11 @@ const ACTION_COLORS: Record<string, string> = {
   user_activated:    '#10B981',
 };
 
-interface SearchParams {
-  page?: string;
-  action?: string;
-  user?: string;
-}
-
-export default async function AdminLogsPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function AdminLogsPage({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect('/login');
@@ -52,21 +51,42 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
   const role = await getCurrentRole(session.user.id);
   if (!can(role, 'admin:audit')) redirect('/musicas');
 
-  const page = Math.max(1, parseInt(searchParams.page ?? '1'));
-  const perPage = 50;
-  const from = (page - 1) * perPage;
+  // Extrair params de forma segura
+  const rawPage   = Array.isArray(searchParams.page)   ? searchParams.page[0]   : searchParams.page;
+  const rawAction = Array.isArray(searchParams.action) ? searchParams.action[0] : searchParams.action;
 
-  let query = supabase
+  const page    = Math.max(1, parseInt(rawPage ?? '1'));
+  const perPage = 50;
+  const from    = (page - 1) * perPage;
+
+  // Service client bypassa RLS — usuário já foi verificado como admin acima
+  const admin = createServiceClient();
+
+  let query = admin
     .from('audit_logs')
-    .select('*, actor:users!user_id(full_name, email)', { count: 'exact' })
+    .select('id, action, entity_type, entity_id, old_value, new_value, created_at, user_id', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, from + perPage - 1);
 
-  if (searchParams.action) {
-    query = query.eq('action', searchParams.action);
+  if (rawAction) {
+    query = query.eq('action', rawAction);
   }
 
-  const { data: logs, count } = await query;
+  const { data: logs, count, error: logsError } = await query;
+
+  // Buscar nomes dos usuários separadamente para evitar erro de join
+  const userIds = [...new Set((logs ?? []).map((l: any) => l.user_id).filter(Boolean))];
+  let usersMap: Record<string, { full_name: string; email: string }> = {};
+
+  if (userIds.length > 0) {
+    const { data: usersData } = await admin
+      .from('users')
+      .select('id, full_name, email')
+      .in('id', userIds);
+
+    usersMap = Object.fromEntries((usersData ?? []).map((u: any) => [u.id, u]));
+  }
+
   const totalPages = Math.ceil((count ?? 0) / perPage);
 
   return (
@@ -74,31 +94,24 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
       <div>
         <h1 className="page-title">Logs de Auditoria</h1>
         <p className="text-gray-500 text-sm mt-1">
-          {count} eventos registrados
+          {count ?? 0} eventos registrados
         </p>
       </div>
 
       {/* Filter */}
       <div className="flex gap-3">
-        <form>
-          <select
-            name="action"
-            defaultValue={searchParams.action ?? ''}
-            onChange={e => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('action', e.target.value);
-              url.searchParams.set('page', '1');
-              window.location.href = url.toString();
-            }}
-            className="input w-auto"
-          >
-            <option value="">Todas as ações</option>
-            {Object.entries(ACTION_LABELS).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
-        </form>
+        <LogsFilterSelect
+          value={rawAction ?? ''}
+          options={Object.entries(ACTION_LABELS).map(([key, label]) => ({ key, label }))}
+        />
       </div>
+
+      {/* Error state */}
+      {logsError && (
+        <div className="card p-4 border border-red-100 bg-red-50 text-red-600 text-sm">
+          Erro ao carregar logs: {logsError.message}
+        </div>
+      )}
 
       {/* Logs table */}
       <div className="card overflow-hidden">
@@ -120,8 +133,9 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
               </tr>
             ) : (
               logs.map((log: any) => {
-                const color = ACTION_COLORS[log.action] ?? '#6B7280';
-                const label = ACTION_LABELS[log.action] ?? log.action;
+                const color  = ACTION_COLORS[log.action] ?? '#6B7280';
+                const label  = ACTION_LABELS[log.action] ?? log.action;
+                const actor  = usersMap[log.user_id];
 
                 return (
                   <tr key={log.id} className="hover:bg-gray-50">
@@ -139,8 +153,8 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
                       </span>
                     </td>
                     <td className="px-5 py-3 hidden sm:table-cell">
-                      <p className="text-sm text-gray-700">{log.actor?.full_name ?? '—'}</p>
-                      <p className="text-xs text-gray-400">{log.actor?.email ?? ''}</p>
+                      <p className="text-sm text-gray-700">{actor?.full_name ?? '—'}</p>
+                      <p className="text-xs text-gray-400">{actor?.email ?? ''}</p>
                     </td>
                     <td className="px-5 py-3 hidden md:table-cell">
                       {(log.new_value || log.old_value) && (
@@ -150,7 +164,8 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
                       )}
                       {log.entity_type && (
                         <p className="text-xs text-gray-400 mt-1">
-                          {log.entity_type} {log.entity_id ? `· ${log.entity_id.slice(0, 8)}…` : ''}
+                          {log.entity_type}
+                          {log.entity_id ? ` · ${String(log.entity_id).slice(0, 8)}…` : ''}
                         </p>
                       )}
                     </td>
@@ -168,7 +183,7 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Se
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <a
               key={p}
-              href={`?page=${p}${searchParams.action ? `&action=${searchParams.action}` : ''}`}
+              href={`?page=${p}${rawAction ? `&action=${rawAction}` : ''}`}
               className={`w-8 h-8 rounded-lg text-sm font-medium flex items-center justify-center transition-colors ${
                 p === page
                   ? 'bg-brand-600 text-white'
