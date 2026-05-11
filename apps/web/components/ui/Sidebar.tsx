@@ -6,7 +6,7 @@ import { can } from '@rl/utils';
 import type { UserRole } from '@rl/types';
 import {
   LayoutDashboard, Music, BookOpen, Users, Tag,
-  ClipboardCheck, ScrollText, ChevronLeft, ChevronRight, X, CalendarDays,
+  ClipboardCheck, ScrollText, ChevronLeft, ChevronRight, X, CalendarDays, UsersRound,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore } from '@/stores/ui.store';
@@ -21,10 +21,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
-  { label: 'Musicas', href: '/musicas', icon: Music },
-  { label: 'Repertorios', href: '/repertorios', icon: BookOpen },
-  { label: 'Aprovacoes', href: '/admin/aprovacoes', icon: ClipboardCheck, permission: 'songs:approve' },
+  { label: 'Dashboard',   href: '/dashboard',         icon: LayoutDashboard, exact: true },
+  { label: 'Musicas',     href: '/musicas',            icon: Music },
+  { label: 'Repertorios', href: '/repertorios',        icon: BookOpen },
+  { label: 'Grupos',      href: '/grupos',             icon: UsersRound },
+  { label: 'Aprovacoes',  href: '/admin/aprovacoes',   icon: ClipboardCheck, permission: 'songs:approve' },
   { label: 'Usuarios', href: '/admin/usuarios', icon: Users, permission: 'users:view' },
   { label: 'Categorias', href: '/admin/categorias', icon: Tag, permission: 'categories:create' },
   { label: 'Celebrações', href: '/admin/celebracoes', icon: CalendarDays, permission: 'categories:create' },

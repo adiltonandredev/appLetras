@@ -7,12 +7,13 @@ import type { Repertory, UserRole } from '@rl/types';
 import { CELEBRATION_LABELS, CELEBRATION_ICONS, formatDate, can } from '@rl/utils';
 import {
   Edit2, Printer, FileDown, Trash2, ArrowLeft,
-  Music, ChevronRight, Clock, MapPin, Maximize2,
+  Music, ChevronRight, Clock, MapPin, Maximize2, Share2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { LyricsFullscreen } from './LyricsFullscreen';
+import { ShareRepertoryModal } from './ShareRepertoryModal';
 
 interface RepertoryViewProps {
   repertory: Repertory & { items: any[]; creator: any };
@@ -26,6 +27,7 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
   const supabase = createClient();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [fullscreenSong, setFullscreenSong] = useState<{ title: string; lyrics: string } | null>(null);
+  const [showShare, setShowShare] = useState(false);
 
   const canEdit = isOwner || can(role, 'repertories:edit:any');
   const canDelete = isOwner || can(role, 'repertories:edit:any');
@@ -53,6 +55,16 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
         />
       )}
 
+      {/* Modal de compartilhamento */}
+      {showShare && (
+        <ShareRepertoryModal
+          repertoryId={repertory.id}
+          repertoryTitle={repertory.title}
+          userId={userId}
+          onClose={() => setShowShare(false)}
+        />
+      )}
+
       <div className="max-w-4xl mx-auto space-y-5">
         {/* Back + actions */}
         <div className="flex items-center justify-between">
@@ -60,12 +72,15 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
             <ArrowLeft className="w-4 h-4" /> Repertórios
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {canEdit && (
               <Link href={`/repertorios/${repertory.id}/editar`} className="btn-secondary">
                 <Edit2 className="w-4 h-4" /> Editar
               </Link>
             )}
+            <button onClick={() => setShowShare(true)} className="btn-secondary">
+              <Share2 className="w-4 h-4" /> Compartilhar
+            </button>
             <button onClick={handlePrint} className="btn-secondary">
               <Printer className="w-4 h-4" /> Imprimir
             </button>

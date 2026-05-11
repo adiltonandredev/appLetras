@@ -14,10 +14,12 @@ export async function getRepertories(
   const from = (page - 1) * per_page;
   const to = from + per_page - 1;
 
+  // A RLS já filtra os repertórios acessíveis (próprios + públicos + compartilhados).
+  // Retorna apenas os criados pelo usuário aqui; shared vem por getSharedRepertories.
   let query = client
     .from('repertories')
     .select(`*, creator:users!created_by(id, full_name, avatar_url)`, { count: 'exact' })
-    .or(`created_by.eq.${userId},is_public.eq.true`)
+    .eq('created_by', userId)
     .range(from, to)
     .order('event_date', { ascending: false });
 
@@ -209,6 +211,45 @@ export async function duplicateRepertory(
   }
 
   return copy;
+}
+
+/** Repertórios compartilhados diretamente com o usuário ou com grupos do usuário */
+export async function getSharedRepertories(
+  client: SupabaseClient,
+  userId: string
+): Promise<Repertory[]> {
+  // 1. IDs de grupos que o usuário pertence
+  const { data: memberships } = await client
+    .from('team_members')
+    .select('team_id')
+    .eq('user_id', userId);
+  const teamIds = (memberships ?? []).map((m: any) => m.team_id);
+
+  // 2. Shares diretos (user) ou via grupo
+  let sharesQuery = client
+    .from('shared_repertories')
+    .select('repertory_id')
+    .neq('repertory_id', null);
+
+  // filtra: shared_with = user OU team_id em grupos do usuário
+  const orParts = [`shared_with.eq.${userId}`];
+  if (teamIds.length) orParts.push(`team_id.in.(${teamIds.join(',')})`);
+  sharesQuery = sharesQuery.or(orParts.join(','));
+
+  const { data: shares } = await sharesQuery;
+  const repIds = [...new Set((shares ?? []).map((s: any) => s.repertory_id))];
+  if (!repIds.length) return [];
+
+  // 3. Busca os repertórios (excluindo os criados pelo próprio usuário)
+  const { data, error } = await client
+    .from('repertories')
+    .select('*, creator:users!created_by(id, full_name, avatar_url)')
+    .in('id', repIds)
+    .neq('created_by', userId)
+    .order('event_date', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function shareRepertory(
