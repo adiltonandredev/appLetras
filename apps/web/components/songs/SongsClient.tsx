@@ -127,57 +127,52 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
             <Link
               key={song.id}
               href={`/musicas/${song.id}`}
-              className="card p-5 hover:shadow-card-hover transition-shadow group"
+              className="card p-4 hover:shadow-card-hover transition-shadow group flex items-center gap-3"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors truncate">
                     {song.title}
                   </h3>
-                  {song.author && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{song.author}</p>
+                  {isAdmin && (
+                    <span
+                      className="badge shrink-0"
+                      style={{
+                        backgroundColor: SONG_STATUS_COLORS[song.status] + '20',
+                        color: SONG_STATUS_COLORS[song.status],
+                      }}
+                    >
+                      {SONG_STATUS_LABELS[song.status]}
+                    </span>
                   )}
                 </div>
-                {isAdmin && (
-                  <span
-                    className="badge ml-2 shrink-0"
-                    style={{
-                      backgroundColor: SONG_STATUS_COLORS[song.status] + '20',
-                      color: SONG_STATUS_COLORS[song.status],
-                    }}
-                  >
-                    {SONG_STATUS_LABELS[song.status]}
-                  </span>
+                {song.author && (
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{song.author}</p>
+                )}
+                {(song.categories?.length > 0 || song.key_note) && (
+                  <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                    {song.key_note && (
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                        {song.key_note}
+                      </span>
+                    )}
+                    {song.categories?.slice(0, 2).map((cat) => (
+                      <span key={cat.id} className="badge bg-brand-50 text-brand-600">
+                        {cat.name}
+                      </span>
+                    ))}
+                    {song.categories?.length > 2 && (
+                      <span className="badge bg-gray-100 text-gray-500">
+                        +{song.categories.length - 2}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {/* Categories */}
-              {song.categories && song.categories.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {song.categories.slice(0, 2).map((cat) => (
-                    <span key={cat.id} className="badge bg-brand-50 text-brand-600">
-                      {cat.name}
-                    </span>
-                  ))}
-                  {song.categories.length > 2 && (
-                    <span className="badge bg-gray-100 text-gray-500">
-                      +{song.categories.length - 2}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                <div className="flex items-center gap-2">
-                  {song.key_note && (
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                      {song.key_note}
-                    </span>
-                  )}
-                </div>
-                <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-400 transition-colors" />
-              </div>
+              {/* Icon — centro direita */}
+              <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-400 transition-colors shrink-0" />
             </Link>
           ))}
         </div>
