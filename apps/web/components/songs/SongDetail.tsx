@@ -305,9 +305,9 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
         </div>
       )}
 
-      {/* Meta footer — somente administrador */}
+      {/* Meta footer — somente administrador, fixado no rodapé */}
       {role === 'administrador' && (
-        <div className="flex items-center justify-between text-xs text-gray-400 pb-4">
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-2.5 bg-white/90 backdrop-blur-sm border-t border-gray-100 text-xs text-gray-400">
           <span>
             Cadastrada por{' '}
             <span className="font-medium text-gray-600">{song.creator?.full_name ?? '—'}</span>
