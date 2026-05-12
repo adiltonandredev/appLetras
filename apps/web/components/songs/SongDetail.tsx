@@ -109,20 +109,27 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{song.title}</h1>
-              <span
-                className="badge"
-                style={{ backgroundColor: statusColor + '20', color: statusColor }}
-              >
-                {statusLabel}
-              </span>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {song.title}
+                {role !== 'administrador' && song.author && (
+                  <span className="font-normal text-gray-400 text-lg ml-2">— {song.author}</span>
+                )}
+              </h1>
+              {role === 'administrador' && (
+                <span
+                  className="badge"
+                  style={{ backgroundColor: statusColor + '20', color: statusColor }}
+                >
+                  {statusLabel}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Metadata grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
-          {song.author && (
+          {role === 'administrador' && song.author && (
             <div>
               <p className="text-xs text-gray-400 mb-0.5">Autor</p>
               <p className="text-sm font-medium text-gray-700">{song.author}</p>

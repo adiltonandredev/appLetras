@@ -18,6 +18,7 @@ interface SongsClientProps {
 }
 
 export function SongsClient({ role, canCreate, canApprove, categories }: SongsClientProps) {
+  const isAdmin = role === 'administrador';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SongStatus | ''>('');
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
@@ -74,15 +75,17 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
           />
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value as SongStatus | ''); setPage(1); }}
-          className="input w-auto"
-        >
-          {statusOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+        {isAdmin && (
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value as SongStatus | ''); setPage(1); }}
+            className="input w-auto"
+          >
+            {statusOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        )}
 
         <select
           value={categoryFilter}
@@ -130,20 +133,22 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors truncate">
                     {song.title}
+                    {song.author && (
+                      <span className="font-normal text-gray-400 text-sm ml-2">— {song.author}</span>
+                    )}
                   </h3>
-                  {song.author && (
-                    <p className="text-xs text-gray-400 mt-0.5">{song.author}</p>
-                  )}
                 </div>
-                <span
-                  className="badge ml-2 shrink-0"
-                  style={{
-                    backgroundColor: SONG_STATUS_COLORS[song.status] + '20',
-                    color: SONG_STATUS_COLORS[song.status],
-                  }}
-                >
-                  {SONG_STATUS_LABELS[song.status]}
-                </span>
+                {isAdmin && (
+                  <span
+                    className="badge ml-2 shrink-0"
+                    style={{
+                      backgroundColor: SONG_STATUS_COLORS[song.status] + '20',
+                      color: SONG_STATUS_COLORS[song.status],
+                    }}
+                  >
+                    {SONG_STATUS_LABELS[song.status]}
+                  </span>
+                )}
               </div>
 
               {/* Categories */}
@@ -161,11 +166,6 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
                   )}
                 </div>
               )}
-
-              {/* Lyrics preview */}
-              <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
-                {truncate(song.lyrics, 100)}
-              </p>
 
               {/* Footer */}
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
