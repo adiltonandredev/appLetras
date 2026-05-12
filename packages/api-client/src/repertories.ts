@@ -168,10 +168,13 @@ export async function reorderRepertoryItems(
   client: SupabaseClient,
   payload: ReorderRepertoryPayload
 ): Promise<void> {
-  const updates = payload.items.map(({ id, position }) =>
-    client.from('repertory_items').update({ position }).eq('id', id)
+  const results = await Promise.all(
+    payload.items.map(({ id, position }) =>
+      client.from('repertory_items').update({ position }).eq('id', id)
+    )
   );
-  await Promise.all(updates);
+  const failed = results.find(r => r.error);
+  if (failed?.error) throw failed.error;
 }
 
 export async function duplicateRepertory(

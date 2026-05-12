@@ -48,7 +48,6 @@ export async function approveSong(
 
   if (fetchError) throw fetchError;
 
-  // Update approval record
   const { error: approvalError } = await client
     .from('song_approvals')
     .update({
@@ -61,7 +60,6 @@ export async function approveSong(
 
   if (approvalError) throw approvalError;
 
-  // Update song status
   const { error: songError } = await client
     .from('songs')
     .update({ status: 'approved', updated_by: reviewerId })
@@ -84,7 +82,7 @@ export async function rejectSong(
 
   if (fetchError) throw fetchError;
 
-  await client
+  const { error: approvalError } = await client
     .from('song_approvals')
     .update({
       status: 'rejected',
@@ -94,10 +92,14 @@ export async function rejectSong(
     })
     .eq('id', approvalId);
 
-  await client
+  if (approvalError) throw approvalError;
+
+  const { error: songError } = await client
     .from('songs')
     .update({ status: 'rejected', updated_by: reviewerId })
     .eq('id', approval.song_id);
+
+  if (songError) throw songError;
 }
 
 export async function requestRevision(
@@ -114,7 +116,7 @@ export async function requestRevision(
 
   if (fetchError) throw fetchError;
 
-  await client
+  const { error: approvalError } = await client
     .from('song_approvals')
     .update({
       status: 'revision_requested',
@@ -124,8 +126,12 @@ export async function requestRevision(
     })
     .eq('id', approvalId);
 
-  await client
+  if (approvalError) throw approvalError;
+
+  const { error: songError } = await client
     .from('songs')
     .update({ status: 'revision_requested', updated_by: reviewerId })
     .eq('id', approval.song_id);
+
+  if (songError) throw songError;
 }

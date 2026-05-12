@@ -254,12 +254,10 @@ export interface ApproveRejectPayload {
   comment?: string;
 }
 
-export interface ShareRepertoryPayload {
-  shared_with?: string;
-  team_id?: string;
-  permission?: SharePermission;
-  expires_at?: string;
-}
+// Pelo menos um dos dois (shared_with OU team_id) deve ser fornecido
+export type ShareRepertoryPayload =
+  | { shared_with: string; team_id?: never; permission?: SharePermission; expires_at?: string }
+  | { team_id: string; shared_with?: never; permission?: SharePermission; expires_at?: string };
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
