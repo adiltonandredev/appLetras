@@ -11,12 +11,22 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') ?? '/dashboard';
 
+  // Erros vindos do callback OAuth via query param
+  const urlError = searchParams.get('error');
+  const urlErrorMessage = urlError === 'oauth_failed'
+    ? 'Falha ao autenticar com o Google. Verifique se o provedor está habilitado e tente novamente.'
+    : urlError === 'oauth_missing_code'
+    ? 'Código de autenticação ausente. Tente novamente.'
+    : urlError
+    ? 'Erro ao autenticar. Tente novamente.'
+    : null;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(urlErrorMessage);
 
   const supabase = createClient();
 
