@@ -17,7 +17,7 @@ export default async function AdminCategoriesPage() {
 
   const { data: categories } = await supabase
     .from('liturgical_categories')
-    .select('*, _count:songs(count)')
+    .select('*, song_categories(count)')
     .order('sort_order');
 
   return (

@@ -60,7 +60,6 @@ export default async function EditSongPage({ params }: Props) {
         categories={categories}
         mode="edit"
         song={normalized as any}
-        userId={session.user.id}
       />
     </div>
   );
