@@ -124,13 +124,98 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
         </select>
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
+      {/* Mobile: cards */}
+      <div className="sm:hidden space-y-2">
+        {filtered.length === 0 && (
+          <div className="card p-8 text-center text-sm text-gray-400">
+            Nenhum usuário encontrado.
+          </div>
+        )}
+        {filtered.map(user => {
+          const userInitials = initials(user.full_name);
+          const roleName = user.role?.name ?? 'padrao';
+          const roleColor = ROLE_COLORS[roleName as keyof typeof ROLE_COLORS] ?? '#6B7280';
+          const roleLabel = ROLE_LABELS[roleName as keyof typeof ROLE_LABELS] ?? roleName;
+          const isChanging = changingRole === user.id;
+          const isSelf = user.id === currentUserId;
+
+          return (
+            <div key={user.id} className={clsx('card p-4', !user.is_active && 'opacity-60')}>
+              <div className="flex items-start justify-between gap-3">
+                {/* Avatar + info */}
+                <div className="flex items-center gap-3 min-w-0">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ backgroundColor: roleColor }}>
+                      {userInitials}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {user.full_name}
+                      {isSelf && <span className="ml-1 text-xs text-gray-400">(você)</span>}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {user.last_login_at ? timeAgo(user.last_login_at) : 'Nunca acessou'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <button
+                  onClick={() => handleToggleActive(user)}
+                  disabled={isSelf}
+                  title={user.is_active ? 'Desativar' : 'Reativar'}
+                  className={clsx(
+                    'p-1.5 rounded-lg transition-colors disabled:opacity-30 shrink-0',
+                    user.is_active
+                      ? 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                      : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
+                  )}
+                >
+                  {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {/* Role selector + status */}
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                <div className="relative flex-1">
+                  <select
+                    value={user.role?.id ?? ''}
+                    onChange={e => handleRoleChange(user.id, e.target.value)}
+                    disabled={isChanging || isSelf}
+                    className="appearance-none w-full text-xs font-semibold rounded-full px-3 py-1.5 pr-7 border-0 cursor-pointer disabled:cursor-default"
+                    style={{ backgroundColor: roleColor + '20', color: roleColor }}
+                  >
+                    {roles.map(r => (
+                      <option key={r.id} value={r.id}>
+                        {ROLE_LABELS[r.name as keyof typeof ROLE_LABELS] ?? r.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!isSelf && (
+                    <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: roleColor }} />
+                  )}
+                </div>
+
+                <span className={clsx('badge text-xs shrink-0', user.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500')}>
+                  {user.is_active ? 'Ativo' : 'Inativo'}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="card overflow-hidden hidden sm:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100 text-left">
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Usuário</th>
-              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Perfil</th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Perfil</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Último acesso</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ações</th>
@@ -158,16 +243,9 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
                       {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={user.full_name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
+                        <img src={user.avatar_url} alt={user.full_name} className="w-8 h-8 rounded-full object-cover" />
                       ) : (
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                          style={{ backgroundColor: roleColor }}
-                        >
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: roleColor }}>
                           {userInitials}
                         </div>
                       )}
@@ -182,17 +260,14 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
                   </td>
 
                   {/* Role */}
-                  <td className="px-5 py-3 hidden sm:table-cell">
+                  <td className="px-5 py-3">
                     <div className="relative">
                       <select
                         value={user.role?.id ?? ''}
                         onChange={e => handleRoleChange(user.id, e.target.value)}
                         disabled={isChanging || isSelf}
                         className="appearance-none text-xs font-semibold rounded-full px-3 py-1.5 pr-7 border-0 cursor-pointer disabled:cursor-default"
-                        style={{
-                          backgroundColor: roleColor + '20',
-                          color: roleColor,
-                        }}
+                        style={{ backgroundColor: roleColor + '20', color: roleColor }}
                       >
                         {roles.map(r => (
                           <option key={r.id} value={r.id}>
@@ -201,10 +276,7 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
                         ))}
                       </select>
                       {!isSelf && (
-                        <ChevronDown
-                          className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-                          style={{ color: roleColor }}
-                        />
+                        <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: roleColor }} />
                       )}
                     </div>
                   </td>
@@ -218,12 +290,7 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
 
                   {/* Active status */}
                   <td className="px-5 py-3">
-                    <span className={clsx(
-                      'badge text-xs',
-                      user.is_active
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
-                    )}>
+                    <span className={clsx('badge text-xs', user.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500')}>
                       {user.is_active ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
@@ -241,10 +308,7 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
                           : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
                       )}
                     >
-                      {user.is_active
-                        ? <UserX className="w-4 h-4" />
-                        : <UserCheck className="w-4 h-4" />
-                      }
+                      {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                     </button>
                   </td>
                 </tr>
