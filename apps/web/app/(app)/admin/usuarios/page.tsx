@@ -56,6 +56,7 @@ export default async function AdminUsersPage() {
         users={normalized as any}
         roles={(roles ?? []).map((r: any) => ({ ...r, id: String(r.id) }))}
         currentUserId={session.user.id}
+        canDelete={can(role, 'users:delete')}
       />
     </div>
   );

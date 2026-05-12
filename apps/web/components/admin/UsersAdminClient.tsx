@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS, ROLE_COLORS, initials, timeAgo } from '@rl/utils';
-import { Search, Shield, UserCheck, UserX, ChevronDown } from 'lucide-react';
+import { Search, UserCheck, UserX, ChevronDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 
@@ -28,14 +28,16 @@ interface Props {
   users: User[];
   roles: Role[];
   currentUserId: string;
+  canDelete?: boolean;
 }
 
-export function UsersAdminClient({ users: initial, roles, currentUserId }: Props) {
+export function UsersAdminClient({ users: initial, roles, currentUserId, canDelete = false }: Props) {
   const supabase = createClient();
   const [users, setUsers] = useState(initial);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filtered = users.filter(u => {
     const matchSearch = !search ||
@@ -48,7 +50,6 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
   async function handleRoleChange(userId: string, newRoleId: string) {
     setChangingRole(userId);
     try {
-      // Remove all existing role assignments for the user, then insert the new one
       const { error: delError } = await supabase
         .from('user_role_assignments')
         .delete()
@@ -97,6 +98,33 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
     }
   }
 
+  async function handleDelete(user: User) {
+    if (user.id === currentUserId) {
+      toast.error('Você não pode excluir sua própria conta.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Excluir permanentemente "${user.full_name}"?\n\nEsta ação não pode ser desfeita. Todos os dados do usuário serão removidos.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error ?? 'Erro ao excluir.');
+
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      toast.success(`Usuário "${user.full_name}" excluído.`);
+    } catch (err: any) {
+      toast.error('Erro: ' + err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Filters */}
@@ -135,8 +163,8 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
           const userInitials = initials(user.full_name);
           const roleName = user.role?.name ?? 'padrao';
           const roleColor = ROLE_COLORS[roleName as keyof typeof ROLE_COLORS] ?? '#6B7280';
-          const roleLabel = ROLE_LABELS[roleName as keyof typeof ROLE_LABELS] ?? roleName;
           const isChanging = changingRole === user.id;
+          const isDeleting = deletingId === user.id;
           const isSelf = user.id === currentUserId;
 
           return (
@@ -163,20 +191,33 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
                   </div>
                 </div>
 
-                {/* Action button */}
-                <button
-                  onClick={() => handleToggleActive(user)}
-                  disabled={isSelf}
-                  title={user.is_active ? 'Desativar' : 'Reativar'}
-                  className={clsx(
-                    'p-1.5 rounded-lg transition-colors disabled:opacity-30 shrink-0',
-                    user.is_active
-                      ? 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-                      : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
+                {/* Action buttons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleToggleActive(user)}
+                    disabled={isSelf}
+                    title={user.is_active ? 'Desativar' : 'Reativar'}
+                    className={clsx(
+                      'p-1.5 rounded-lg transition-colors disabled:opacity-30',
+                      user.is_active
+                        ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
+                        : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
+                    )}
+                  >
+                    {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                  </button>
+
+                  {canDelete && !isSelf && (
+                    <button
+                      onClick={() => handleDelete(user)}
+                      disabled={isDeleting}
+                      title="Excluir usuário permanentemente"
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   )}
-                >
-                  {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                </button>
+                </div>
               </div>
 
               {/* Role selector + status */}
@@ -233,8 +274,8 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
               const userInitials = initials(user.full_name);
               const roleName = user.role?.name ?? 'padrao';
               const roleColor = ROLE_COLORS[roleName as keyof typeof ROLE_COLORS] ?? '#6B7280';
-              const roleLabel = ROLE_LABELS[roleName as keyof typeof ROLE_LABELS] ?? roleName;
               const isChanging = changingRole === user.id;
+              const isDeleting = deletingId === user.id;
               const isSelf = user.id === currentUserId;
 
               return (
@@ -297,19 +338,32 @@ export function UsersAdminClient({ users: initial, roles, currentUserId }: Props
 
                   {/* Actions */}
                   <td className="px-5 py-3">
-                    <button
-                      onClick={() => handleToggleActive(user)}
-                      disabled={isSelf}
-                      title={user.is_active ? 'Desativar usuário' : 'Reativar usuário'}
-                      className={clsx(
-                        'p-1.5 rounded-lg transition-colors disabled:opacity-30',
-                        user.is_active
-                          ? 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-                          : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleToggleActive(user)}
+                        disabled={isSelf}
+                        title={user.is_active ? 'Desativar usuário' : 'Reativar usuário'}
+                        className={clsx(
+                          'p-1.5 rounded-lg transition-colors disabled:opacity-30',
+                          user.is_active
+                            ? 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
+                            : 'text-gray-400 hover:text-green-500 hover:bg-green-50'
+                        )}
+                      >
+                        {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                      </button>
+
+                      {canDelete && !isSelf && (
+                        <button
+                          onClick={() => handleDelete(user)}
+                          disabled={isDeleting}
+                          title="Excluir usuário permanentemente"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       )}
-                    >
-                      {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                    </button>
+                    </div>
                   </td>
                 </tr>
               );
