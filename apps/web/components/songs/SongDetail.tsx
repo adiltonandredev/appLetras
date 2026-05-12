@@ -85,24 +85,15 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
                 {statusLabel}
               </span>
             </div>
-            {song.subtitle && (
-              <p className="text-gray-500 text-sm">{song.subtitle}</p>
-            )}
           </div>
         </div>
 
         {/* Metadata grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
           {song.author && (
             <div>
               <p className="text-xs text-gray-400 mb-0.5">Autor</p>
               <p className="text-sm font-medium text-gray-700">{song.author}</p>
-            </div>
-          )}
-          {song.composer && (
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Compositor</p>
-              <p className="text-sm font-medium text-gray-700">{song.composer}</p>
             </div>
           )}
           {song.key_note && (
@@ -111,10 +102,20 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
               <p className="text-sm font-bold text-brand-700 font-mono">{song.key_note}</p>
             </div>
           )}
-          {song.bpm && (
+          {song.media_url && (
             <div>
-              <p className="text-xs text-gray-400 mb-0.5">BPM</p>
-              <p className="text-sm font-medium text-gray-700">{song.bpm}</p>
+              <p className="text-xs text-gray-400 mb-0.5">Ouvir música</p>
+              <a
+                href={song.media_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-brand-600 hover:text-brand-500 hover:underline truncate block max-w-[200px]"
+              >
+                {(() => {
+                  try { return new URL(song.media_url).hostname.replace('www.', ''); }
+                  catch { return song.media_url; }
+                })()}
+              </a>
             </div>
           )}
         </div>

@@ -175,9 +175,6 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
                       {song.key_note}
                     </span>
                   )}
-                  {song.bpm && (
-                    <span className="text-xs text-gray-400">{song.bpm} BPM</span>
-                  )}
                 </div>
                 <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-400 transition-colors" />
               </div>

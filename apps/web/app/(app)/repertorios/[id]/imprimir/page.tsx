@@ -256,7 +256,7 @@ export default async function PrintRepertoryPage({ params }: Props) {
               const song = item.song;
               if (!song) return null;
               const displayKey   = item.custom_key ?? song.key_note;
-              const authorLine   = [song.author, song.composer].filter(Boolean).join(' / ');
+              const authorLine   = song.author ?? '';
               const categoryName = song.categories?.[0]?.category?.name ?? '';
 
               return (

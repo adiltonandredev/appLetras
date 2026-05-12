@@ -9,19 +9,17 @@ import { createClient } from '@/lib/supabase/client';
 import { createSong, updateSong, submitSongForReview } from '@rl/api-client';
 import { KEY_NOTES } from '@rl/utils';
 import type { LiturgicalCategory, Song } from '@rl/types';
-import { Save, Send, Loader2, Plus, X, Info } from 'lucide-react';
+import { Save, Send, Loader2, Plus, X, Info, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AutocompleteInput, type Suggestion } from '@/components/ui/AutocompleteInput';
 
 const schema = z.object({
   title: z.string().min(2, 'Título muito curto').max(200),
-  subtitle: z.string().max(200).optional(),
   author: z.string().max(200).optional(),
-  composer: z.string().max(200).optional(),
   lyrics: z.string().min(10, 'Letra muito curta'),
   chords: z.string().optional(),
   key_note: z.string().optional(),
-  bpm: z.coerce.number().min(20).max(300).optional().or(z.literal('')),
+  media_url: z.string().url('URL inválida').optional().or(z.literal('')),
   observations: z.string().max(1000).optional(),
   category_ids: z.array(z.number()).optional(),
   tags: z.array(z.string()).optional(),
@@ -55,10 +53,8 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
   // ─── Autocomplete state ───────────────────────────────────────
   const [titleSuggestions, setTitleSuggestions] = useState<Suggestion[]>([]);
   const [authorSuggestions, setAuthorSuggestions] = useState<Suggestion[]>([]);
-  const [composerSuggestions, setComposerSuggestions] = useState<Suggestion[]>([]);
   const [loadingTitle, setLoadingTitle] = useState(false);
   const [loadingAuthor, setLoadingAuthor] = useState(false);
-  const [loadingComposer, setLoadingComposer] = useState(false);
 
   const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -105,34 +101,15 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
     });
   }, [supabase]);
 
-  const searchComposers = useCallback((q: string) => {
-    if (q.trim().length < 2) { setComposerSuggestions([]); return; }
-    setLoadingComposer(true);
-    debounce('composer', async () => {
-      const { data } = await supabase
-        .from('songs')
-        .select('composer')
-        .ilike('composer', `%${q}%`)
-        .not('composer', 'is', null)
-        .limit(20);
-      setLoadingComposer(false);
-      if (!data) return;
-      const unique = [...new Set(data.map(s => s.composer).filter(Boolean))] as string[];
-      setComposerSuggestions(unique.slice(0, 6).map(v => ({ value: v })));
-    });
-  }, [supabase]);
-
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: song?.title ?? '',
-      subtitle: song?.subtitle ?? '',
       author: song?.author ?? '',
-      composer: song?.composer ?? '',
       lyrics: song?.lyrics ?? '',
       chords: song?.chords ?? '',
       key_note: song?.key_note ?? '',
-      bpm: song?.bpm ?? undefined,
+      media_url: song?.media_url ?? '',
       observations: song?.observations ?? '',
       category_ids: song?.categories?.map(c => c.id) ?? [],
       tags: song?.tags ?? [],
@@ -194,7 +171,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
 
       const payload = {
         ...data,
-        bpm: data.bpm === '' ? undefined : Number(data.bpm),
+        media_url: data.media_url === '' ? undefined : data.media_url,
       };
 
       if (mode === 'create') {
@@ -251,47 +228,40 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
           </div>
 
           <div>
-            <label className="label">Subtítulo</label>
-            <input {...register('subtitle')} className="input" placeholder="Ex: Kyrie" />
+            <label className="label">Autor / Intérprete</label>
+            <AutocompleteInput
+              value={watch('author') ?? ''}
+              onChange={v => { setValue('author', v); searchAuthors(v); }}
+              onSelect={v => setValue('author', v)}
+              suggestions={authorSuggestions}
+              loading={loadingAuthor}
+              placeholder="Ex: Comunidade Shalom"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Autor / Intérprete</label>
-              <AutocompleteInput
-                value={watch('author') ?? ''}
-                onChange={v => { setValue('author', v); searchAuthors(v); }}
-                onSelect={v => setValue('author', v)}
-                suggestions={authorSuggestions}
-                loading={loadingAuthor}
-                placeholder="Ex: Comunidade Shalom"
-              />
-            </div>
-            <div>
-              <label className="label">Compositor</label>
-              <AutocompleteInput
-                value={watch('composer') ?? ''}
-                onChange={v => { setValue('composer', v); searchComposers(v); }}
-                onSelect={v => setValue('composer', v)}
-                suggestions={composerSuggestions}
-                loading={loadingComposer}
-                placeholder="Ex: Pe. Zezinho"
-              />
-            </div>
+          <div>
+            <label className="label">Tom</label>
+            <select {...register('key_note')} className="input">
+              <option value="">Selecionar tom</option>
+              {KEY_NOTES.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="label">Tom</label>
-              <select {...register('key_note')} className="input">
-                <option value="">Selecionar tom</option>
-                {KEY_NOTES.map(k => <option key={k} value={k}>{k}</option>)}
-              </select>
+          <div>
+            <label className="label">URL da música</label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <Link2 className="w-4 h-4" />
+              </div>
+              <input
+                {...register('media_url')}
+                type="url"
+                className="input pl-9"
+                placeholder="https://youtube.com/watch?v=..."
+              />
             </div>
-            <div>
-              <label className="label">BPM</label>
-              <input {...register('bpm')} type="number" min="20" max="300" className="input" placeholder="Ex: 72" />
-            </div>
+            {errors.media_url && <p className="text-red-500 text-xs mt-1">{errors.media_url.message}</p>}
+            <p className="text-xs text-gray-400 mt-1">YouTube, Spotify, SoundCloud ou qualquer plataforma de música.</p>
           </div>
         </div>
       </div>

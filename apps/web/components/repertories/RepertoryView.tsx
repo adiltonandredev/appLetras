@@ -230,9 +230,6 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
                           {displayKey}
                         </span>
                       )}
-                      {song?.bpm && (
-                        <span className="text-xs text-gray-400">{song.bpm} BPM</span>
-                      )}
                       <ChevronRight
                         className={clsx(
                           'w-4 h-4 text-gray-300 transition-transform',

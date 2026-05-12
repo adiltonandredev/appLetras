@@ -84,13 +84,11 @@ export interface LiturgicalCategory {
 export interface Song {
   id: string;
   title: string;
-  subtitle?: string | null;
   author?: string | null;
-  composer?: string | null;
   lyrics: string;
   chords?: string | null;
   key_note?: string | null;
-  bpm?: number | null;
+  media_url?: string | null;
   tags: string[];
   observations?: string | null;
   status: SongStatus;
@@ -214,13 +212,11 @@ export interface AuditLog {
 
 export interface CreateSongPayload {
   title: string;
-  subtitle?: string;
   author?: string;
-  composer?: string;
   lyrics: string;
   chords?: string;
   key_note?: string;
-  bpm?: number;
+  media_url?: string;
   tags?: string[];
   observations?: string;
   category_ids?: number[];
