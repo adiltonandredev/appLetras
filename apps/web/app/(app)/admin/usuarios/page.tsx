@@ -15,34 +15,53 @@ export default async function AdminUsersPage() {
   const role = await getCurrentRole(session.user.id);
   if (!can(role, 'users:view')) redirect('/musicas');
 
-  // Service client bypasses RLS
   const admin = createServiceClient();
 
-  // Query 1: all users
-  const { data: users, error: usersError } = await admin
-    .from('users')
-    .select('id, full_name, email, avatar_url, created_at, last_login_at, is_active')
-    .order('created_at', { ascending: false });
+  // Fonte primária: auth.users (todos sem exceção)
+  const { data: authData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const authUsers = authData?.users ?? [];
 
-  // Query 2: all role assignments
+  // Dados complementares de public.users
+  const { data: publicUsers } = await admin
+    .from('users')
+    .select('id, full_name, avatar_url, last_login_at, is_active, created_at');
+
+  // Perfis atribuídos
   const { data: assignments } = await admin
     .from('user_role_assignments')
     .select('user_id, role_id');
 
-  // Query 3: all roles
+  // Roles disponíveis
   const { data: roles } = await admin
     .from('roles')
     .select('id, name, label, level')
     .order('level');
 
-  // Merge: attach role to each user
-  const normalized = (users ?? []).map((u: any) => {
-    const assignment = (assignments ?? []).find((a: any) => a.user_id === u.id);
-    const userRole = assignment
-      ? (roles ?? []).find((r: any) => r.id === assignment.role_id) ?? null
-      : null;
-    return { ...u, role: userRole };
+  // Mapa para lookup rápido
+  const publicMap = Object.fromEntries((publicUsers ?? []).map((u: any) => [u.id, u]));
+  const assignMap = Object.fromEntries((assignments ?? []).map((a: any) => [a.user_id, a.role_id]));
+  const roleMap   = Object.fromEntries((roles ?? []).map((r: any) => [r.id, r]));
+
+  // Mescla: auth como base + dados de public.users + role
+  const normalized = authUsers.map((au) => {
+    const pub = publicMap[au.id];
+    const roleId = assignMap[au.id];
+    const userRole = roleId ? roleMap[roleId] ?? null : null;
+
+    return {
+      id:            au.id,
+      email:         au.email ?? '',
+      full_name:     pub?.full_name ?? au.user_metadata?.full_name ?? au.email?.split('@')[0] ?? '—',
+      avatar_url:    pub?.avatar_url ?? au.user_metadata?.avatar_url ?? null,
+      created_at:    au.created_at,
+      last_login_at: pub?.last_login_at ?? au.last_sign_in_at ?? null,
+      is_active:     pub?.is_active ?? true,
+      role:          userRole,
+    };
   });
+
+  // Ordena por data de cadastro mais recente
+  normalized.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
