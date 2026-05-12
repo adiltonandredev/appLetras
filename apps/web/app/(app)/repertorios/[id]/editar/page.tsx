@@ -19,7 +19,7 @@ export default async function EditRepertoryPage({ params }: Props) {
         *,
         items:repertory_items(
           id, position, custom_key, observations,
-          song:songs(id, title, author, key_note, bpm, status,
+          song:songs(id, title, author, key_note, media_urls, status,
             categories:song_categories(category:liturgical_categories(id, name, slug)))
         )
       `)
@@ -27,7 +27,7 @@ export default async function EditRepertoryPage({ params }: Props) {
       .single(),
     supabase
       .from('songs')
-      .select(`id, title, author, key_note, bpm,
+      .select(`id, title, author, key_note, media_urls,
         categories:song_categories(category:liturgical_categories(id, name, slug, icon))`)
       .eq('status', 'approved')
       .order('title'),
@@ -68,6 +68,4 @@ export default async function EditRepertoryPage({ params }: Props) {
         mode="edit"
         repertory={repertory as any}
       />
-    </div>
-  );
-}
+    </

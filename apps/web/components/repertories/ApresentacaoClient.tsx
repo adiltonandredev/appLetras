@@ -15,7 +15,7 @@ interface Item {
     author?: string;
     lyrics?: string;
     key_note?: string;
-    bpm?: number;
+    media_urls?: string[];
     categories?: { name: string }[];
   };
 }

@@ -19,7 +19,7 @@ const schema = z.object({
   lyrics: z.string().min(10, 'Letra muito curta'),
   chords: z.string().optional(),
   key_note: z.string().optional(),
-  media_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  media_urls: z.array(z.string().url('URL inválida').or(z.literal(''))).optional(),
   observations: z.string().max(1000).optional(),
   category_ids: z.array(z.number()).optional(),
   tags: z.array(z.string()).optional(),
@@ -109,7 +109,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
       lyrics: song?.lyrics ?? '',
       chords: song?.chords ?? '',
       key_note: song?.key_note ?? '',
-      media_url: song?.media_url ?? '',
+      media_urls: song?.media_urls?.length ? song.media_urls : [''],
       observations: song?.observations ?? '',
       category_ids: song?.categories?.map(c => c.id) ?? [],
       tags: song?.tags ?? [],
@@ -171,7 +171,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
 
       const payload = {
         ...data,
-        media_url: data.media_url === '' ? undefined : data.media_url,
+        media_urls: (data.media_urls ?? []).filter(u => u.trim() !== ''),
       };
 
       if (mode === 'create') {
@@ -248,20 +248,50 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
           </div>
 
           <div>
-            <label className="label">URL da música</label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <Link2 className="w-4 h-4" />
-              </div>
-              <input
-                {...register('media_url')}
-                type="url"
-                className="input pl-9"
-                placeholder="https://youtube.com/watch?v=..."
-              />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="label !mb-0">Links da música</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = watch('media_urls') ?? [''];
+                  setValue('media_urls', [...current, '']);
+                }}
+                className="flex items-center gap-1 text-xs text-brand-600 hover:text-brand-500 font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Adicionar link
+              </button>
             </div>
-            {errors.media_url && <p className="text-red-500 text-xs mt-1">{errors.media_url.message}</p>}
-            <p className="text-xs text-gray-400 mt-1">YouTube, Spotify, SoundCloud ou qualquer plataforma de música.</p>
+            <div className="space-y-2">
+              {(watch('media_urls') ?? ['']).map((_, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <Link2 className="w-4 h-4" />
+                    </div>
+                    <input
+                      {...register(`media_urls.${idx}`)}
+                      type="url"
+                      className="input pl-9"
+                      placeholder="https://youtube.com/watch?v=..."
+                    />
+                  </div>
+                  {(watch('media_urls') ?? []).length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = watch('media_urls') ?? [];
+                        setValue('media_urls', current.filter((_, i) => i !== idx));
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">YouTube, Spotify, SoundCloud ou qualquer plataforma.</p>
           </div>
         </div>
       </div>

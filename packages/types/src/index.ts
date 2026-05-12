@@ -88,7 +88,7 @@ export interface Song {
   lyrics: string;
   chords?: string | null;
   key_note?: string | null;
-  media_url?: string | null;
+  media_urls?: string[] | null;
   tags: string[];
   observations?: string | null;
   status: SongStatus;
@@ -216,7 +216,7 @@ export interface CreateSongPayload {
   lyrics: string;
   chords?: string;
   key_note?: string;
-  media_url?: string;
+  media_urls?: string[];
   tags?: string[];
   observations?: string;
   category_ids?: number[];

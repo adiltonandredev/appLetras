@@ -34,7 +34,7 @@ export default async function RepertoryPage({ params }: Props) {
       items:repertory_items(
         *,
         song:songs(
-          id, title, author, lyrics, key_note, bpm, status,
+          id, title, author, lyrics, key_note, media_urls, status,
           categories:song_categories(category:liturgical_categories(id, name, slug))
         )
       )
@@ -65,5 +65,4 @@ export default async function RepertoryPage({ params }: Props) {
       isOwner={isOwner}
       userId={session.user.id}
     />
-  );
-}
+ 

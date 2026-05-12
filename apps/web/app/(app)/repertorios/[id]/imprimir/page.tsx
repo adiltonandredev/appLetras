@@ -58,7 +58,7 @@ export default async function PrintRepertoryPage({ params }: Props) {
       items:repertory_items(
         id, position, custom_key, observations,
         song:songs(
-          id, title, author, composer, key_note, bpm, lyrics, chords,
+          id, title, author, key_note, media_urls, lyrics, chords,
           categories:song_categories(
             category:liturgical_categories(name, slug)
           )

@@ -13,7 +13,7 @@ export default async function NewRepertoryPage() {
     supabase
       .from('songs')
       .select(`
-        id, title, author, key_note, bpm,
+        id, title, author, key_note, media_urls,
         categories:song_categories(category:liturgical_categories(id, name, slug, icon))
       `)
       .eq('status', 'approved')
@@ -43,5 +43,4 @@ export default async function NewRepertoryPage() {
         mode="create"
       />
     </div>
-  );
-}
+ 
