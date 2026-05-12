@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 interface LyricsRendererProps {
   lyrics: string;
   className?: string;
+  fontSize?: number;
 }
 
 const SECTION_REGEX = /^\[(Refrão|Refrao|REFRÃO|REFRAO|Estrofe\s*\d*|ESTROFE\s*\d*|Verso\s*\d*|VERSO\s*\d*|Ponte|PONTE|Pré-Refrão|Pré-refrão|Pre-Refrão|Pre-refrão|PRÉ-REFRÃO|Coda|CODA|Intro|INTRO|Final|FINAL|Bridge|BRIDGE)\]$/i;
@@ -53,8 +54,10 @@ function parseLyrics(lyrics: string): LyricsBlock[] {
   return blocks;
 }
 
-export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
+export function LyricsRenderer({ lyrics, className, fontSize }: LyricsRendererProps) {
   if (!lyrics) return null;
+
+  const fontStyle = fontSize ? { fontSize: `${fontSize}px`, lineHeight: 1.7 } : undefined;
 
   const blocks = parseLyrics(lyrics);
   const hasMarkers = blocks.some(b => b.header !== null);
@@ -62,7 +65,10 @@ export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
   // If no markers, just render as plain pre
   if (!hasMarkers) {
     return (
-      <pre className={clsx('text-gray-700 whitespace-pre-wrap font-sans text-base leading-relaxed', className)}>
+      <pre
+        className={clsx('text-gray-700 whitespace-pre-wrap font-sans leading-relaxed', className)}
+        style={fontStyle}
+      >
         {lyrics}
       </pre>
     );
@@ -78,12 +84,15 @@ export function LyricsRenderer({ lyrics, className }: LyricsRendererProps) {
         return (
           <div key={i}>
             {content && (
-              <pre className={clsx(
-                'whitespace-pre-wrap font-sans leading-relaxed text-base',
-                isChorus && 'font-bold text-gray-900 pl-3 border-l-2 border-gold-400',
-                isBridge && 'italic text-gray-700',
-                !isChorus && !isBridge && 'text-gray-700',
-              )}>
+              <pre
+                className={clsx(
+                  'whitespace-pre-wrap font-sans leading-relaxed',
+                  isChorus && 'font-bold text-gray-900 pl-3 border-l-2 border-gold-400',
+                  isBridge && 'italic text-gray-700',
+                  !isChorus && !isBridge && 'text-gray-700',
+                )}
+                style={fontStyle}
+              >
                 {content}
               </pre>
             )}
