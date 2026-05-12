@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
 import { createSong, updateSong, submitSongForReview } from '@rl/api-client';
 import { KEY_NOTES } from '@rl/utils';
-import type { LiturgicalCategory, Song } from '@rl/types';
+import type { LiturgicalCategory, Song, UserRole } from '@rl/types';
 import { Save, Send, Loader2, Plus, X, Info, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AutocompleteInput, type Suggestion } from '@/components/ui/AutocompleteInput';
@@ -31,6 +31,7 @@ interface SongFormProps {
   categories: LiturgicalCategory[];
   mode: 'create' | 'edit';
   song?: Song;
+  userRole?: UserRole;
 }
 
 const SECTION_MARKERS = [
@@ -42,7 +43,8 @@ const SECTION_MARKERS = [
   { label: 'Final', value: '[Final]', color: 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200' },
 ];
 
-export function SongForm({ categories, mode, song }: SongFormProps) {
+export function SongForm({ categories, mode, song, userRole }: SongFormProps) {
+  const isAdmin = userRole === 'administrador';
   const router = useRouter();
   const supabase = createClient();
   const [tagInput, setTagInput] = useState('');
@@ -177,9 +179,14 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
       if (mode === 'create') {
         const created = await createSong(supabase, payload, user.id);
         if (submitForReview) {
-          // Usa submitSongForReview que atualiza songs.status E cria o registro em song_approvals
-          await submitSongForReview(supabase, created.id, user.id);
-          toast.success('Música enviada para aprovação!');
+          if (isAdmin) {
+            // Admin: aprova diretamente sem fila de aprovação
+            await supabase.from('songs').update({ status: 'approved', updated_by: user.id }).eq('id', created.id);
+            toast.success('Música publicada com sucesso!');
+          } else {
+            await submitSongForReview(supabase, created.id, user.id);
+            toast.success('Música enviada para aprovação!');
+          }
         } else {
           toast.success('Música salva como rascunho!');
         }
@@ -187,9 +194,13 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
       } else if (song) {
         await updateSong(supabase, song.id, payload, user.id);
         if (submitForReview) {
-          // Edição + envio para revisão
-          await submitSongForReview(supabase, song.id, user.id);
-          toast.success('Música enviada para aprovação!');
+          if (isAdmin) {
+            await supabase.from('songs').update({ status: 'approved', updated_by: user.id }).eq('id', song.id);
+            toast.success('Música publicada com sucesso!');
+          } else {
+            await submitSongForReview(supabase, song.id, user.id);
+            toast.success('Música enviada para aprovação!');
+          }
         } else {
           toast.success('Música atualizada!');
         }
@@ -474,7 +485,7 @@ export function SongForm({ categories, mode, song }: SongFormProps) {
           className="btn-primary"
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          Enviar para aprovação
+          {isAdmin ? 'Publicar' : 'Enviar para aprovação'}
         </button>
       </div>
     </form>
