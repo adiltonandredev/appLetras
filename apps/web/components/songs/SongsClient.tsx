@@ -133,10 +133,10 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors truncate">
                     {song.title}
-                    {song.author && (
-                      <span className="font-normal text-gray-400 text-sm ml-2">— {song.author}</span>
-                    )}
                   </h3>
+                  {song.author && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{song.author}</p>
+                  )}
                 </div>
                 {isAdmin && (
                   <span

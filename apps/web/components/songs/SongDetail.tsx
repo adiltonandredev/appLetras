@@ -109,12 +109,10 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {song.title}
-                {role !== 'administrador' && song.author && (
-                  <span className="font-normal text-gray-400 text-lg ml-2">— {song.author}</span>
-                )}
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">{song.title}</h1>
+              {role !== 'administrador' && song.author && (
+                <p className="text-sm text-gray-400 mt-1">{song.author}</p>
+              )}
               {role === 'administrador' && (
                 <span
                   className="badge"
