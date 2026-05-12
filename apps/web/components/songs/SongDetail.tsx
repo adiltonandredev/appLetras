@@ -10,6 +10,7 @@ import type { Song, UserRole, SongApproval } from '@rl/types';
 import {
   ArrowLeft, Edit2, Send, Archive, Clock, User, Tag,
   Music, ChordDiagram, CheckCircle, XCircle, MessageSquare, Link2,
+  Maximize2, Minimize2, ALargeSmall, AArrowUp, AArrowDown,
 } from 'lucide-react';
 
 function PlatformIcon({ url }: { url: string }) {
@@ -59,6 +60,12 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
   const supabase = createClient();
   const [tab, setTab] = useState<'lyrics' | 'chords'>('lyrics');
   const [submitting, setSubmitting] = useState(false);
+  const [fontSize, setFontSize] = useState(16); // px
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const FONT_MIN = 12;
+  const FONT_MAX = 28;
+  const FONT_STEP = 2;
 
   const isOwner = song.created_by === currentUserId;
   const canEdit = (isOwner && ['draft', 'revision_requested'].includes(song.status)) || can(role, 'songs:edit:any');
@@ -134,9 +141,9 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
             </div>
           )}
           {song.key_note && (
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Tom</p>
-              <p className="text-sm font-bold text-brand-700 font-mono">{song.key_note}</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-400">Tom:</span>
+              <span className="text-sm font-bold text-brand-700 font-mono">{song.key_note}</span>
             </div>
           )}
           {song.media_urls && song.media_urls.length > 0 && (
@@ -211,30 +218,75 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
       )}
 
       {/* Lyrics / Chords */}
-      <div className="card overflow-hidden">
-        {/* Tabs */}
-        <div className="flex border-b border-gray-100 px-2 pt-2 gap-1">
-          {(['lyrics', 'chords'] as const).map(t => (
+      <div className={clsx(
+        'card overflow-hidden',
+        fullscreen && 'fixed inset-0 z-50 rounded-none flex flex-col bg-white'
+      )}>
+        {/* Tabs + controls */}
+        <div className="flex items-center border-b border-gray-100 px-2 pt-2 gap-1">
+          <div className="flex gap-1 flex-1">
+            {(['lyrics', 'chords'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={clsx(
+                  'px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors',
+                  tab === t
+                    ? 'bg-white text-brand-700 border-b-2 border-brand-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+              >
+                {t === 'lyrics' ? '🎵 Letra' : '🎸 Cifra'}
+              </button>
+            ))}
+          </div>
+
+          {/* Controls: font size + fullscreen */}
+          <div className="flex items-center gap-1 pb-1.5 pr-1">
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={clsx(
-                'px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors',
-                tab === t
-                  ? 'bg-white text-brand-700 border-b-2 border-brand-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              )}
+              onClick={() => setFontSize(s => Math.max(FONT_MIN, s - FONT_STEP))}
+              disabled={fontSize <= FONT_MIN}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              title="Diminuir fonte"
             >
-              {t === 'lyrics' ? '🎵 Letra' : '🎸 Cifra'}
+              <span className="text-xs font-bold">A-</span>
             </button>
-          ))}
+            <span className="text-xs text-gray-400 w-7 text-center tabular-nums">{fontSize}</span>
+            <button
+              onClick={() => setFontSize(s => Math.min(FONT_MAX, s + FONT_STEP))}
+              disabled={fontSize >= FONT_MAX}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              title="Aumentar fonte"
+            >
+              <span className="text-sm font-bold">A+</span>
+            </button>
+            <button
+              onClick={() => setFullscreen(f => !f)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors ml-1"
+              title={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+            >
+              {fullscreen
+                ? <Minimize2 className="w-4 h-4" />
+                : <Maximize2 className="w-4 h-4" />
+              }
+            </button>
+          </div>
         </div>
 
-        <div className="p-6">
+        <div className={clsx('p-4 sm:p-6', fullscreen && 'flex-1 overflow-y-auto')}>
+          {fullscreen && (
+            <p className="text-base font-bold text-gray-900 mb-4">
+              {song.title}
+              {song.author && <span className="font-normal text-gray-400 text-sm ml-2">{song.author}</span>}
+            </p>
+          )}
           {tab === 'lyrics' ? (
-            <LyricsRenderer lyrics={song.lyrics} />
+            <LyricsRenderer lyrics={song.lyrics} fontSize={fontSize} />
           ) : song.chords ? (
-            <pre className="text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+            <pre
+              className="text-gray-700 whitespace-pre-wrap font-mono leading-relaxed"
+              style={{ fontSize: `${fontSize}px` }}
+            >
               {song.chords}
             </pre>
           ) : (
@@ -253,17 +305,19 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
         </div>
       )}
 
-      {/* Meta footer */}
-      <div className="flex items-center justify-between text-xs text-gray-400 pb-4">
-        <span>
-          Cadastrada por{' '}
-          <span className="font-medium text-gray-600">{song.creator?.full_name ?? '—'}</span>
-          {' · '}{timeAgo(song.created_at)}
-        </span>
-        <Link href={`/musicas/${song.id}/historico`} className="text-brand-600 hover:underline font-medium">
-          Ver histórico de revisões →
-        </Link>
-      </div>
+      {/* Meta footer — somente administrador */}
+      {role === 'administrador' && (
+        <div className="flex items-center justify-between text-xs text-gray-400 pb-4">
+          <span>
+            Cadastrada por{' '}
+            <span className="font-medium text-gray-600">{song.creator?.full_name ?? '—'}</span>
+            {' · '}{timeAgo(song.created_at)}
+          </span>
+          <Link href={`/musicas/${song.id}/historico`} className="text-brand-600 hover:underline font-medium">
+            Ver histórico de revisões →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
