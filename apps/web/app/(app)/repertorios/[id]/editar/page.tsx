@@ -68,4 +68,6 @@ export default async function EditRepertoryPage({ params }: Props) {
         mode="edit"
         repertory={repertory as any}
       />
-    </
+    </div>
+  );
+}

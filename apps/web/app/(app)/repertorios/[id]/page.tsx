@@ -66,3 +66,5 @@ export default async function RepertoryPage({ params }: Props) {
       userId={session.user.id}
     />
  
+  );
+}
