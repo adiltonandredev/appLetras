@@ -112,44 +112,42 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
       </div>
 
       {/* Header */}
-      <div className="card p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{song.title}</h1>
-              {role !== 'administrador' && song.author && (
-                <p className="text-sm text-gray-400 mt-1">{song.author}</p>
-              )}
-              {role === 'administrador' && (
-                <span
-                  className="badge"
-                  style={{ backgroundColor: statusColor + '20', color: statusColor }}
-                >
-                  {statusLabel}
-                </span>
-              )}
-            </div>
-          </div>
+      <div className="card p-4 sm:p-5">
+        {/* Título + status */}
+        <div className="flex items-start gap-2 flex-wrap">
+          <h1 className="text-xl font-bold text-gray-900 leading-tight">{song.title}</h1>
+          {role === 'administrador' && (
+            <span
+              className="badge mt-0.5 shrink-0"
+              style={{ backgroundColor: statusColor + '20', color: statusColor }}
+            >
+              {statusLabel}
+            </span>
+          )}
         </div>
 
-        {/* Metadata grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
-          {role === 'administrador' && song.author && (
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Autor</p>
-              <p className="text-sm font-medium text-gray-700">{song.author}</p>
-            </div>
-          )}
-          {song.key_note && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-400">Tom:</span>
-              <span className="text-sm font-bold text-brand-700 font-mono">{song.key_note}</span>
-            </div>
-          )}
-          {song.media_urls && song.media_urls.length > 0 && (
-            <div>
-              <p className="text-xs text-gray-400 mb-1.5">Ouvir música</p>
-              <div className="flex items-center gap-2 flex-wrap">
+        {/* Autor */}
+        {song.author && (
+          <p className="text-sm text-gray-400 mt-0.5">{song.author}</p>
+        )}
+
+        {/* Metadados compactos */}
+        {(song.key_note || (song.media_urls && song.media_urls.length > 0) ||
+          (song.categories && song.categories.length > 0) || (song.tags && song.tags.length > 0)) && (
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-2 mt-3 pt-3 border-t border-gray-100">
+
+            {/* Tom */}
+            {song.key_note && (
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-xs text-gray-400">Tom:</span>
+                <span className="text-sm font-bold text-brand-700 font-mono">{song.key_note}</span>
+              </div>
+            )}
+
+            {/* Ouvir música */}
+            {song.media_urls && song.media_urls.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-400">Ouvir:</span>
                 {song.media_urls.map((url, i) => (
                   <a
                     key={i}
@@ -157,35 +155,31 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
                     target="_blank"
                     rel="noopener noreferrer"
                     title={url}
-                    className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 hover:border-gray-300 hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 hover:border-gray-300 hover:bg-gray-100 transition-colors"
                   >
                     <PlatformIcon url={url} />
                   </a>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* Categories */}
-        {song.categories && song.categories.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {song.categories.map((cat: any) => (
-              <span key={cat.id} className="badge bg-indigo-50 text-indigo-700">
-                {cat.name}
-              </span>
-            ))}
-          </div>
-        )}
+            {/* Categorias */}
+            {song.categories && song.categories.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {song.categories.map((cat: any) => (
+                  <span key={cat.id} className="badge bg-indigo-50 text-indigo-700">{cat.name}</span>
+                ))}
+              </div>
+            )}
 
-        {/* Tags */}
-        {song.tags && song.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {song.tags.map((tag: string) => (
-              <span key={tag} className="badge bg-gray-100 text-gray-500">
-                #{tag}
-              </span>
-            ))}
+            {/* Tags */}
+            {song.tags && song.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {song.tags.map((tag: string) => (
+                  <span key={tag} className="badge bg-gray-100 text-gray-500">#{tag}</span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
