@@ -61,11 +61,8 @@ export default async function DashboardPage() {
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
 
-  // URL da Liturgia do Dia — navega direto para a data atual
-  const yyyy = now.getFullYear();
-  const mm   = String(now.getMonth() + 1).padStart(2, '0');
-  const dd   = String(now.getDate()).padStart(2, '0');
-  const liturgiaUrl = `https://liturgia.cancaonova.com/pb/${yyyy}/${mm}/${dd}/`;
+  // URL da Liturgia do Dia — o site exibe o dia atual automaticamente
+  const liturgiaUrl = 'https://liturgia.cancaonova.com/pb/';
 
   const quickLinks = [
     { label: 'Nova Música',     href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
