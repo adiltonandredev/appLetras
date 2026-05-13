@@ -7,6 +7,8 @@ import { Users, Plus, ChevronRight, Crown, LogOut, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { can } from '@rl/utils';
+import type { UserRole } from '@rl/types';
 
 interface Group {
   id: string;
@@ -21,9 +23,11 @@ interface Props {
   myGroups: Group[];
   memberGroups: Group[];
   userId: string;
+  role: UserRole;
 }
 
-export function GruposClient({ myGroups, memberGroups, userId }: Props) {
+export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
+  const canCreate = can(role, 'groups:create');
   const router = useRouter();
   const supabase = createClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -131,15 +135,19 @@ export function GruposClient({ myGroups, memberGroups, userId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Grupos</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Crie grupos para compartilhar repertórios</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {canCreate ? 'Crie e gerencie grupos de música' : 'Grupos em que você participa'}
+          </p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary">
-          <Plus className="w-4 h-4" /> Novo grupo
-        </button>
+        {canCreate && (
+          <button onClick={() => setShowCreate(true)} className="btn-primary">
+            <Plus className="w-4 h-4" /> Novo grupo
+          </button>
+        )}
       </div>
 
-      {/* Modal criar grupo */}
-      {showCreate && (
+      {/* Modal criar grupo — apenas para quem tem permissão */}
+      {canCreate && showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Criar grupo</h2>
@@ -179,21 +187,23 @@ export function GruposClient({ myGroups, memberGroups, userId }: Props) {
         </div>
       )}
 
-      {/* Meus grupos */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Meus grupos</h2>
-        {myGroups.length === 0 ? (
-          <div className="card p-8 text-center">
-            <Users className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-            <p className="text-gray-400 text-sm">Você ainda não criou nenhum grupo.</p>
-            <button onClick={() => setShowCreate(true)} className="btn-primary mt-3 inline-flex">
-              <Plus className="w-4 h-4" /> Criar primeiro grupo
-            </button>
-          </div>
-        ) : (
-          myGroups.map(g => <GroupCard key={g.id} group={g} owner />)
-        )}
-      </section>
+      {/* Meus grupos — apenas para quem pode criar */}
+      {canCreate && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Meus grupos</h2>
+          {myGroups.length === 0 ? (
+            <div className="card p-8 text-center">
+              <Users className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+              <p className="text-gray-400 text-sm">Você ainda não criou nenhum grupo.</p>
+              <button onClick={() => setShowCreate(true)} className="btn-primary mt-3 inline-flex">
+                <Plus className="w-4 h-4" /> Criar primeiro grupo
+              </button>
+            </div>
+          ) : (
+            myGroups.map(g => <GroupCard key={g.id} group={g} owner />)
+          )}
+        </section>
+      )}
 
       {/* Grupos em que é membro */}
       {memberGroups.length > 0 && (

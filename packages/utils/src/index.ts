@@ -159,6 +159,7 @@ export const PERMISSIONS: Record<string, UserRole[]> = {
   'songs:edit:any':     ['administrador'],
   'songs:approve':      ['master', 'administrador'],
   'songs:delete':       ['master', 'administrador'],
+  'groups:create':        ['intermediario', 'master', 'administrador'],
   'repertories:create':   ['padrao', 'intermediario', 'master', 'administrador'],
   'repertories:share':    ['padrao', 'intermediario', 'master', 'administrador'],
   'repertories:edit:any': ['master', 'administrador'],

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getCurrentRole } from '@/lib/auth/permissions';
 import { GruposClient } from '@/components/grupos/GruposClient';
 
 export const metadata = { title: 'Grupos' };
@@ -8,6 +9,8 @@ export default async function GruposPage() {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect('/login');
+
+  const role = await getCurrentRole(session.user.id);
 
   // Grupos criados pelo usuário
   const { data: myGroups } = await supabase
@@ -33,6 +36,7 @@ export default async function GruposPage() {
       myGroups={myGroups ?? []}
       memberGroups={memberGroups}
       userId={session.user.id}
+      role={role}
     />
   );
 }
