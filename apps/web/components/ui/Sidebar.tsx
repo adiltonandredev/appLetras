@@ -6,7 +6,7 @@ import { can } from '@rl/utils';
 import type { UserRole } from '@rl/types';
 import {
   LayoutDashboard, Music, BookOpen, Users, Tag,
-  ClipboardCheck, ScrollText, ChevronLeft, ChevronRight, X, CalendarDays, UsersRound,
+  ClipboardCheck, ScrollText, ChevronLeft, ChevronRight, X, CalendarDays, UsersRound, Info,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore } from '@/stores/ui.store';
@@ -30,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Categorias', href: '/admin/categorias', icon: Tag, permission: 'categories:create' },
   { label: 'Celebrações', href: '/admin/celebracoes', icon: CalendarDays, permission: 'categories:create' },
   { label: 'Logs', href: '/admin/logs', icon: ScrollText, permission: 'admin:audit' },
+  { label: 'Sobre', href: '/sobre', icon: Info },
 ];
 
 interface SidebarProps {
