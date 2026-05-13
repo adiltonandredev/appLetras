@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 // Music, BookOpen, ClipboardCheck também usados em statsData via iconName string
 import Link from 'next/link';
-import { formatDate, timeAgo, CELEBRATION_ICONS } from '@rl/utils';
+import { formatDate, timeAgo, CELEBRATION_ICONS, CELEBRATION_LABELS } from '@rl/utils';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import type { StatItem } from '@/components/dashboard/DashboardStats';
 
@@ -46,14 +46,16 @@ export default async function DashboardPage() {
       : Promise.resolve({ count: 0, error: null }),
   ]);
 
+  const REP_SELECT = 'id, title, celebration, event_date, created_at, community, creator:users!created_by(full_name)';
+
   const [recentRepertories, recentSongs] = await Promise.all([
     isAdmin
-      ? supabase.from('repertories').select('id, title, celebration, event_date, created_at').order('created_at', { ascending: false }).limit(4)
+      ? supabase.from('repertories').select(REP_SELECT).order('created_at', { ascending: false }).limit(4)
       : isPadrao
         ? sharedRepIds.length > 0
-          ? supabase.from('repertories').select('id, title, celebration, event_date, created_at').in('id', sharedRepIds).order('event_date', { ascending: false }).limit(4)
+          ? supabase.from('repertories').select(REP_SELECT).in('id', sharedRepIds).order('event_date', { ascending: false }).limit(4)
           : Promise.resolve({ data: [], error: null })
-        : supabase.from('repertories').select('id, title, celebration, event_date, created_at').eq('created_by', session.user.id).order('created_at', { ascending: false }).limit(4),
+        : supabase.from('repertories').select(REP_SELECT).eq('created_by', session.user.id).order('created_at', { ascending: false }).limit(4),
     supabase.from('songs').select('id, title, created_at, key_note').eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
   ]);
 
@@ -172,14 +174,36 @@ export default async function DashboardPage() {
                   <Link href="/repertorios/novo" className="text-xs text-brand-600 font-semibold mt-1.5 inline-block">Criar o primeiro →</Link>
                 )}
               </div>
-            ) : recentRepertories.data?.map((r) => (
-              <Link key={r.id} href={`/repertorios/${r.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">
-                <span className="text-lg shrink-0">{CELEBRATION_ICONS[((r.celebration || 'outro') as CelebrationType)]}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 group-hover:text-brand-700 transition-colors truncate">{r.title}</p>
-                  <p className="text-xs text-gray-400">{r.event_date ? formatDate(r.event_date) : timeAgo(r.created_at)}</p>
+            ) : recentRepertories.data?.map((r: any) => (
+              <Link key={r.id} href={`/repertorios/${r.id}`} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-lg leading-none">{CELEBRATION_ICONS[((r.celebration || 'outro') as CelebrationType)]}</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 group-hover:text-brand-700 transition-colors truncate">{r.title}</p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                    {r.celebration && (
+                      <span className="text-xs text-emerald-600 font-medium">
+                        {CELEBRATION_LABELS[(r.celebration as CelebrationType)]}
+                      </span>
+                    )}
+                    {r.community && (
+                      <span className="text-xs text-gray-400 truncate">{r.community}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-x-2 mt-0.5">
+                    <p className="text-xs text-gray-400">
+                      {r.event_date ? formatDate(r.event_date) : timeAgo(r.created_at)}
+                    </p>
+                    {r.creator?.full_name && (
+                      <span className="text-xs text-gray-300">·</span>
+                    )}
+                    {r.creator?.full_name && (
+                      <p className="text-xs text-gray-400 truncate">por {r.creator.full_name}</p>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 shrink-0 mt-1" />
               </Link>
             ))}
           </div>
