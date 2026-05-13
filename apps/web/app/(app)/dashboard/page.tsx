@@ -24,6 +24,7 @@ export default async function DashboardPage() {
   const firstName = (session.user.user_metadata?.full_name ?? 'usuário').split(' ')[0];
 
   const isAdmin = can(role, 'users:view');
+  const isPadrao = role === 'padrao';
 
   const [songsResult, repertoriesResult, pendingResult] = await Promise.all([
     supabase.from('songs').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
@@ -77,17 +78,17 @@ export default async function DashboardPage() {
       {/* ── Acesso Rápido — destaque principal ────── */}
       <div className="card p-4 sm:p-6">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Acesso Rápido</p>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-9 gap-2 sm:gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
           {quickLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className="flex flex-col items-center gap-2 group"
             >
-              <div className={`w-full aspect-square max-w-[60px] mx-auto rounded-2xl ${link.bg} flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform shadow-sm`}>
-                <link.icon className={`w-6 h-6 ${link.color}`} />
+              <div className={`w-full aspect-square max-w-[80px] mx-auto rounded-2xl ${link.bg} flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform shadow-sm`}>
+                <link.icon className={`w-7 h-7 ${link.color}`} />
               </div>
-              <span className={`text-[10px] sm:text-xs font-semibold text-center leading-tight ${link.color}`}>
+              <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight ${link.color}`}>
                 {link.label}
               </span>
             </Link>
@@ -95,11 +96,11 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Estatísticas (colapsável no mobile) ───── */}
-      <DashboardStats stats={statsData} />
+      {/* ── Estatísticas — oculto para usuário padrão ── */}
+      {!isPadrao && <DashboardStats stats={statsData} />}
 
       {/* ── Recentes ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 gap-4 ${!isPadrao ? 'lg:grid-cols-2' : ''}`}>
 
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -140,7 +141,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="card overflow-hidden">
+        {!isPadrao && <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -178,7 +179,7 @@ export default async function DashboardPage() {
               </Link>
             ))}
           </div>
-        </div>
+        </div>}
 
       </div>
     </div>
