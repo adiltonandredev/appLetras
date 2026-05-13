@@ -4,27 +4,33 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { getRepertories, getSharedRepertories, deleteRepertory, duplicateRepertory } from '@rl/api-client';
-import { CELEBRATION_ICONS, CELEBRATION_LABELS, formatDate } from '@rl/utils';
-import type { Repertory } from '@rl/types';
+import { CELEBRATION_ICONS, CELEBRATION_LABELS, formatDate, can } from '@rl/utils';
+import type { Repertory, UserRole } from '@rl/types';
 import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
 interface RepertoriesClientProps {
   userId: string;
+  role: UserRole;
 }
 
-export function RepertoriesClient({ userId }: RepertoriesClientProps) {
+export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
+  const canCreate = can(role, 'repertories:create');
+  const isPadrao = role === 'padrao';
+
   const supabase = createClient();
   const queryClient = useQueryClient();
 
+  // Usuário padrão não busca repertórios próprios (não pode criar)
   const { data, isLoading } = useQuery({
     queryKey: ['repertories', search, page],
     queryFn: () => getRepertories(supabase, userId, { q: search || undefined, page, per_page: 12 }),
+    enabled: !isPadrao,
   });
 
   const { data: shared = [], isLoading: loadingShared } = useQuery({
@@ -56,88 +62,94 @@ export function RepertoriesClient({ userId }: RepertoriesClientProps) {
       <div className="page-header">
         <div>
           <h1 className="page-title">Repertórios</h1>
-          <p className="text-gray-500 text-sm mt-0.5">{data?.count ?? 0} repertório{data?.count !== 1 ? 's' : ''}</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {isPadrao
+              ? `${shared.length} repertório${shared.length !== 1 ? 's' : ''} compartilhado${shared.length !== 1 ? 's' : ''} com você`
+              : `${data?.count ?? 0} repertório${data?.count !== 1 ? 's' : ''}`}
+          </p>
         </div>
-        <Link href="/repertorios/novo" className="btn-primary">
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Novo repertório</span>
-          <span className="sm:hidden">Novo</span>
-        </Link>
+        {canCreate && (
+          <Link href="/repertorios/novo" className="btn-primary">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Novo repertório</span>
+            <span className="sm:hidden">Novo</span>
+          </Link>
+        )}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="search"
-          placeholder="Buscar repertório..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="input pl-9"
-        />
-      </div>
+      {/* Search — oculto para padrão (só vê compartilhados) */}
+      {!isPadrao && (
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="search"
+            placeholder="Buscar repertório..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="input pl-9"
+          />
+        </div>
+      )}
 
-      {/* ── Meus Repertórios ── */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Meus repertórios</h2>
+      {/* ── Meus Repertórios — oculto para padrão ── */}
+      {!isPadrao && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Meus repertórios</h2>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="card p-5 animate-pulse">
-                <div className="h-5 bg-gray-100 rounded w-2/3 mb-3" />
-                <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
-                <div className="h-4 bg-gray-100 rounded w-1/3" />
-              </div>
-            ))}
-          </div>
-        ) : data?.data.length === 0 ? (
-          <div className="card p-14 text-center">
-            <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">Nenhum repertório ainda</p>
-            <Link href="/repertorios/novo" className="btn-primary mt-4 inline-flex">
-              <Plus className="w-4 h-4" /> Criar primeiro repertório
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {data?.data.map((rep) => (
-              <RepertoryCard
-                key={rep.id}
-                repertory={rep}
-                menuOpen={menuOpen === rep.id}
-                onMenuToggle={() => setMenuOpen(menuOpen === rep.id ? null : rep.id)}
-                onDuplicate={() => duplicateMutation.mutate(rep.id)}
-                onDelete={() => {
-                  if (confirm('Excluir este repertório?')) deleteMutation.mutate(rep.id);
-                }}
-                showActions
-              />
-            ))}
-          </div>
-        )}
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="card p-5 animate-pulse">
+                  <div className="h-5 bg-gray-100 rounded w-2/3 mb-3" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : data?.data.length === 0 ? (
+            <div className="card p-14 text-center">
+              <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">Nenhum repertório ainda</p>
+              {canCreate && (
+                <Link href="/repertorios/novo" className="btn-primary mt-4 inline-flex">
+                  <Plus className="w-4 h-4" /> Criar primeiro repertório
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {data?.data.map((rep) => (
+                <RepertoryCard
+                  key={rep.id}
+                  repertory={rep}
+                  menuOpen={menuOpen === rep.id}
+                  onMenuToggle={() => setMenuOpen(menuOpen === rep.id ? null : rep.id)}
+                  onDuplicate={() => duplicateMutation.mutate(rep.id)}
+                  onDelete={() => { if (confirm('Excluir este repertório?')) deleteMutation.mutate(rep.id); }}
+                  showActions
+                />
+              ))}
+            </div>
+          )}
 
-        {/* Paginação */}
-        {data && data.total_pages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
-              className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-40">
-              Anterior
-            </button>
-            <span className="text-sm text-gray-500">Página {page} de {data.total_pages}</span>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= data.total_pages}
-              className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-40">
-              Próxima
-            </button>
-          </div>
-        )}
-      </section>
+          {data && data.total_pages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
+                className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-40">Anterior</button>
+              <span className="text-sm text-gray-500">Página {page} de {data.total_pages}</span>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= data.total_pages}
+                className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-40">Próxima</button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── Compartilhados comigo ── */}
-      {(loadingShared || shared.length > 0) && (
+      {(loadingShared || shared.length > 0 || isPadrao) && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
-            <Share2 className="w-4 h-4" /> Compartilhados comigo
+            <Share2 className="w-4 h-4" />
+            {isPadrao ? 'Repertórios disponíveis para você' : 'Compartilhados comigo'}
           </h2>
 
           {loadingShared ? (

@@ -45,7 +45,7 @@ export default async function DashboardPage() {
 
   const quickLinks = [
     { label: 'Nova Música',    href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
-    { label: 'Repertório',     href: '/repertorios/novo',   icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: true },
+    { label: 'Novo Repertório', href: '/repertorios/novo',  icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
     { label: 'Músicas',        href: '/musicas',            icon: Music,          color: 'text-blue-600',    bg: 'bg-blue-50',    show: true },
     { label: 'Repertórios',    href: '/repertorios',        icon: BookOpen,       color: 'text-violet-600',  bg: 'bg-violet-50',  show: true },
     { label: 'Aprovações',     href: '/admin/aprovacoes',   icon: ClipboardCheck, color: 'text-amber-600',   bg: 'bg-amber-50',   show: can(role, 'songs:approve') },
