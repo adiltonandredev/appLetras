@@ -122,45 +122,53 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
         </div>
 
         {/* Header card */}
-        <div className="card p-6">
-          <div className="flex items-start gap-4">
-            <span className="text-4xl">
-              {CELEBRATION_ICONS[(repertory.celebration as any) ?? 'outro']}
-            </span>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{repertory.title}</h1>
-              {repertory.celebration && (
-                <p className="text-brand-600 font-medium mt-0.5">
-                  {CELEBRATION_LABELS[repertory.celebration]}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-500">
-                {repertory.event_date && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatDate(repertory.event_date, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-                  </span>
-                )}
-                {repertory.community && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {repertory.community}
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <Music className="w-3.5 h-3.5" />
-                  {repertory.items?.length ?? 0} músicas
+        <div className="card overflow-hidden">
+          {/* Faixa superior com gradiente */}
+          <div className="bg-gradient-to-br from-brand-50 to-violet-50 px-5 pt-5 pb-4">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                <span className="text-2xl leading-none">
+                  {CELEBRATION_ICONS[(repertory.celebration as any) ?? 'outro']}
                 </span>
               </div>
-
-              {repertory.observations && (
-                <p className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-                  {repertory.observations}
-                </p>
-              )}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">{repertory.title}</h1>
+                {repertory.celebration && (
+                  <span className="inline-block mt-1 text-xs font-semibold bg-brand-100 text-brand-700 px-2.5 py-0.5 rounded-full">
+                    {CELEBRATION_LABELS[repertory.celebration]}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Metadados em linha compacta */}
+          <div className="px-5 py-3 flex flex-wrap gap-x-4 gap-y-1.5">
+            {repertory.event_date && (
+              <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                {formatDate(repertory.event_date, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+              </span>
+            )}
+            {repertory.community && (
+              <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                {repertory.community}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+              <Music className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              {repertory.items?.length ?? 0} música{(repertory.items?.length ?? 0) !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          {repertory.observations && (
+            <div className="px-5 pb-4">
+              <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                {repertory.observations}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Song sequence */}
