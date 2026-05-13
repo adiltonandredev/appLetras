@@ -57,6 +57,16 @@ export default async function DashboardPage() {
     supabase.from('songs').select('id, title, created_at, key_note').eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
   ]);
 
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+
+  // URL da Liturgia do Dia — navega direto para a data atual
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const dd   = String(now.getDate()).padStart(2, '0');
+  const liturgiaUrl = `https://liturgia.cancaonova.com/pb/${yyyy}/${mm}/${dd}/`;
+
   const quickLinks = [
     { label: 'Nova Música',     href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
     { label: 'Novo Repertório', href: '/repertorios/novo',   icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
@@ -75,16 +85,6 @@ export default async function DashboardPage() {
     { label: isAdmin ? 'Total repertórios' : 'Meus repertórios', value: repertoriesResult.count ?? 0, iconName: 'BookOpen', color: 'text-emerald-500', bg: 'bg-emerald-50' },
     ...(can(role, 'songs:approve') ? [{ label: 'Aguardando aprovação', value: (pendingResult as any).count ?? 0, iconName: 'ClipboardCheck' as const, color: 'text-amber-500', bg: 'bg-amber-50' }] : []),
   ];
-
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-
-  // URL da Liturgia do Dia — navega direto para a data atual
-  const yyyy = now.getFullYear();
-  const mm   = String(now.getMonth() + 1).padStart(2, '0');
-  const dd   = String(now.getDate()).padStart(2, '0');
-  const liturgiaUrl = `https://liturgia.cancaonova.com/pb/${yyyy}/${mm}/${dd}/`;
 
   return (
     <div className="max-w-2xl lg:max-w-6xl mx-auto space-y-6">
