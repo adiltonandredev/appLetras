@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Mail, Phone } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'Sobre' };
 
@@ -55,27 +54,7 @@ export default function SobrePage() {
         <p className="text-xs text-gray-400 uppercase tracking-widest font-medium mb-3">Desenvolvido por</p>
         <p className="text-xl font-black text-gray-900">Adilton André</p>
 
-        <div className="flex flex-col gap-2 mt-4">
-          <a
-            href="mailto:adiltonandre@gmail.com"
-            className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-brand-600 transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            adiltonandre@gmail.com
-          </a>
-          <a
-            href="https://wa.me/5569999772514"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-[#25D366] transition-colors"
-          >
-            <Phone className="w-4 h-4" />
-            +55 (69) 99977-2514
-          </a>
-        </div>
-
-        {/* Redes sociais */}
-        <div className="flex items-center justify-center gap-3 mt-5">
+        <div className="flex items-center justify-center gap-3 mt-4">
           {SOCIAL_LINKS.map((s) => (
             <a
               key={s.label}
