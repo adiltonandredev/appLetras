@@ -7,9 +7,11 @@ import {
   Music, BookOpen, ClipboardCheck, Plus, ArrowRight,
   Users, Tag, CalendarDays, User, ListMusic, PlusCircle, ChevronRight,
 } from 'lucide-react';
+// Music, BookOpen, ClipboardCheck também usados em statsData via iconName string
 import Link from 'next/link';
 import { formatDate, timeAgo, CELEBRATION_ICONS } from '@rl/utils';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import type { StatItem } from '@/components/dashboard/DashboardStats';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -52,10 +54,10 @@ export default async function DashboardPage() {
     { label: 'Perfil',         href: '/perfil',             icon: User,           color: 'text-gray-500',    bg: 'bg-gray-100',   show: true },
   ].filter(l => l.show);
 
-  const statsData = [
-    { label: 'Músicas aprovadas',   value: songsResult.count ?? 0,            icon: Music,         color: 'text-blue-500',    bg: 'bg-blue-50' },
-    { label: isAdmin ? 'Total repertórios' : 'Meus repertórios', value: repertoriesResult.count ?? 0, icon: BookOpen, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    ...(can(role, 'songs:approve') ? [{ label: 'Aguardando aprovação', value: (pendingResult as any).count ?? 0, icon: ClipboardCheck, color: 'text-amber-500', bg: 'bg-amber-50' }] : []),
+  const statsData: StatItem[] = [
+    { label: 'Músicas aprovadas',   value: songsResult.count ?? 0,            iconName: 'Music',         color: 'text-blue-500',    bg: 'bg-blue-50' },
+    { label: isAdmin ? 'Total repertórios' : 'Meus repertórios', value: repertoriesResult.count ?? 0, iconName: 'BookOpen', color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    ...(can(role, 'songs:approve') ? [{ label: 'Aguardando aprovação', value: (pendingResult as any).count ?? 0, iconName: 'ClipboardCheck' as const, color: 'text-amber-500', bg: 'bg-amber-50' }] : []),
   ];
 
   const hour = new Date().getHours();
