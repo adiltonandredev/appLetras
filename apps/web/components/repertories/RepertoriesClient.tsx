@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getRepertories, getSharedRepertories, deleteRepertory, duplicateRepertory } from '@rl/api-client';
 import { CELEBRATION_ICONS, CELEBRATION_LABELS, formatDate, can } from '@rl/utils';
 import type { Repertory, UserRole } from '@rl/types';
-import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2 } from 'lucide-react';
+import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2, Users, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -201,27 +201,34 @@ function RepertoryCard({
   showActions: boolean;
   sharedBadge?: boolean;
 }) {
+  const celebration = (repertory.celebration as any) ?? 'outro';
+  const creator = (repertory as any).creator;
+
   return (
-    <div className="card p-5 relative group hover:shadow-card-hover transition-shadow">
-      <div className="flex items-start justify-between mb-4">
+    <div className="card overflow-hidden relative group hover:shadow-card-hover transition-all duration-200 hover:-translate-y-0.5 flex flex-col">
+
+      {/* Topo colorido com ícone */}
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 px-5 pt-5 pb-4 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">
-            {CELEBRATION_ICONS[(repertory.celebration as any) ?? 'outro']}
-          </span>
+          <div className="w-11 h-11 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
+            <span className="text-2xl leading-none">
+              {CELEBRATION_ICONS[celebration]}
+            </span>
+          </div>
           <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-semibold text-gray-900 leading-snug">{repertory.title}</h3>
+            <h3 className="font-bold text-gray-900 leading-snug text-sm">{repertory.title}</h3>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              {repertory.celebration && (
+                <span className="inline-flex items-center text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                  {CELEBRATION_LABELS[repertory.celebration]}
+                </span>
+              )}
               {sharedBadge && (
-                <span className="inline-flex items-center gap-0.5 text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+                <span className="inline-flex items-center gap-0.5 text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
                   <Share2 className="w-2.5 h-2.5" /> Compartilhado
                 </span>
               )}
             </div>
-            {repertory.celebration && (
-              <p className="text-xs text-gray-400 mt-0.5">
-                {CELEBRATION_LABELS[repertory.celebration]}
-              </p>
-            )}
           </div>
         </div>
 
@@ -229,11 +236,10 @@ function RepertoryCard({
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); onMenuToggle(); }}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-white/70 transition-colors"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
-
             {menuOpen && (
               <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-modal border border-gray-100 py-1 z-20">
                 <Link href={`/repertorios/${repertory.id}`} className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
@@ -251,24 +257,30 @@ function RepertoryCard({
         )}
       </div>
 
-      <div className="space-y-1.5">
+      {/* Corpo com metadados */}
+      <div className="px-5 py-3 flex-1 space-y-2">
         {repertory.event_date && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar className="w-3.5 h-3.5" />
-            {formatDate(repertory.event_date)}
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="font-medium">{formatDate(repertory.event_date)}</span>
           </div>
         )}
         {repertory.community && (
-          <p className="text-xs text-gray-400">{repertory.community}</p>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Users className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate">{repertory.community}</span>
+          </div>
         )}
-        {sharedBadge && (repertory as any).creator && (
-          <p className="text-xs text-gray-400">
-            por {(repertory as any).creator.full_name}
-          </p>
+        {creator?.full_name && (
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <User className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">por {creator.full_name}</span>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
+      {/* Rodapé com ações */}
+      <div className="flex items-center gap-2 px-5 py-3 border-t border-gray-100">
         <Link href={`/repertorios/${repertory.id}`} className="btn-primary flex-1 justify-center py-2 text-xs">
           <Eye className="w-3.5 h-3.5" /> Abrir
         </Link>
