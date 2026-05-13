@@ -6,6 +6,7 @@ import { slugify } from '@rl/utils';
 import { Plus, Edit2, Trash2, GripVertical, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface Category {
   id: string;
@@ -28,6 +29,7 @@ const PRESET_ICONS = ['🎵', '✝️', '🕊️', '🙏', '🎶', '🌟', '🕯
 
 export function CategoriesAdminClient({ categories: initial }: Props) {
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [categories, setCategories] = useState(initial);
   const [creating, setCreating] = useState(false);
   const [newCat, setNewCat] = useState<EditState>({ name: '', icon: '🎵' });
@@ -89,7 +91,14 @@ export function CategoriesAdminClient({ categories: initial }: Props) {
   }
 
   async function handleDelete(cat: Category) {
-    if (!confirm(`Excluir a categoria "${cat.name}"? Músicas associadas ficarão sem esta categoria.`)) return;
+    const ok = await confirm({
+      title: 'Excluir categoria',
+      message: `"${cat.name}" será removida. Músicas associadas ficarão sem esta categoria.`,
+      confirmLabel: 'Excluir',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
     try {
       const { error } = await supabase
         .from('liturgical_categories')
@@ -111,6 +120,7 @@ export function CategoriesAdminClient({ categories: initial }: Props) {
 
   return (
     <div className="space-y-4">
+      {ConfirmDialogNode}
       <div className="flex justify-end">
         <button onClick={() => setCreating(true)} className="btn-primary" disabled={creating}>
           <Plus className="w-4 h-4" /> Nova categoria

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Plus, Edit2, Trash2, Check, X, GripVertical, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface CelebrationType {
   id: string;
@@ -37,6 +38,7 @@ function slugify(text: string) {
 export function CelebrationTypesAdminClient({ types: initial }: Props) {
   const supabase = createClient();
   const router = useRouter();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [types, setTypes] = useState(initial);
   const [creating, setCreating] = useState(false);
   const [newType, setNewType] = useState({ name: '', icon: '🎵' });
@@ -116,7 +118,14 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
   }
 
   async function handleDelete(type: CelebrationType) {
-    if (!confirm(`Excluir o tipo "${type.name}"? Repertórios que usam este tipo não serão afetados.`)) return;
+    const ok = await confirm({
+      title: 'Excluir tipo de celebração',
+      message: `"${type.name}" será removido. Repertórios que já usam este tipo não serão afetados.`,
+      confirmLabel: 'Excluir',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
     try {
       const { error } = await supabase
         .from('celebration_types')
@@ -139,6 +148,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
 
   return (
     <div className="space-y-4">
+      {ConfirmDialogNode}
       <div className="flex justify-end">
         <button
           onClick={() => setCreating(true)}

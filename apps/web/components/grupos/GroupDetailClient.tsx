@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { formatDate } from '@rl/utils';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface Member {
   user_id: string;
@@ -46,6 +47,7 @@ interface Props {
 export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }: Props) {
   const router = useRouter();
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
 
   const [showAddMember, setShowAddMember]   = useState(false);
   const [searchEmail, setSearchEmail]       = useState('');
@@ -104,7 +106,14 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
   }
 
   async function removeMember(memberId: string, memberName: string) {
-    if (!confirm(`Remover ${memberName} do grupo?`)) return;
+    const ok = await confirm({
+      title: 'Remover membro',
+      message: `${memberName} perderá acesso ao grupo e aos repertórios compartilhados com ele.`,
+      confirmLabel: 'Remover',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
     const { error } = await supabase
       .from('team_members')
       .delete()
@@ -116,7 +125,14 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
   }
 
   async function removeShare(shareId: string) {
-    if (!confirm('Remover este repertório compartilhado do grupo?')) return;
+    const ok = await confirm({
+      title: 'Remover compartilhamento',
+      message: 'Os membros deste grupo não poderão mais acessar este repertório.',
+      confirmLabel: 'Remover',
+      variant: 'warning',
+      icon: 'alert',
+    });
+    if (!ok) return;
     const { error } = await supabase.from('shared_repertories').delete().eq('id', shareId);
     if (error) { toast.error('Erro ao remover compartilhamento.'); return; }
     toast.success('Compartilhamento removido.');
@@ -127,6 +143,7 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
+      {ConfirmDialogNode}
       {/* Back */}
       <Link href="/grupos" className="btn-ghost -ml-2 inline-flex">
         <ArrowLeft className="w-4 h-4" /> Grupos

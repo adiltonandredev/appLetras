@@ -6,6 +6,7 @@ import { ROLE_LABELS, ROLE_COLORS, initials, timeAgo } from '@rl/utils';
 import { Search, UserCheck, UserX, ChevronDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface User {
   id: string;
@@ -33,6 +34,7 @@ interface Props {
 
 export function UsersAdminClient({ users: initial, roles, currentUserId, canDelete = false }: Props) {
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [users, setUsers] = useState(initial);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
@@ -104,9 +106,13 @@ export function UsersAdminClient({ users: initial, roles, currentUserId, canDele
       return;
     }
 
-    const confirmed = confirm(
-      `Excluir permanentemente "${user.full_name}"?\n\nEsta ação não pode ser desfeita. Todos os dados do usuário serão removidos.`
-    );
+    const confirmed = await confirm({
+      title: 'Excluir usuário',
+      message: `"${user.full_name}" será removido permanentemente. Todos os dados do usuário serão excluídos e esta ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir permanentemente',
+      variant: 'danger',
+      icon: 'trash',
+    });
     if (!confirmed) return;
 
     setDeletingId(user.id);
@@ -127,6 +133,7 @@ export function UsersAdminClient({ users: initial, roles, currentUserId, canDele
 
   return (
     <div className="space-y-4">
+      {ConfirmDialogNode}
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">

@@ -9,6 +9,7 @@ import type { Repertory, UserRole } from '@rl/types';
 import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2, Users, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface RepertoriesClientProps {
   userId: string;
@@ -19,6 +20,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const { confirm, ConfirmDialogNode } = useConfirm();
 
   const canCreate = can(role, 'repertories:create');
   const isPadrao = role === 'padrao';
@@ -58,6 +60,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {ConfirmDialogNode}
       {/* Header */}
       <div className="page-header">
         <div>
@@ -125,7 +128,16 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
                   menuOpen={menuOpen === rep.id}
                   onMenuToggle={() => setMenuOpen(menuOpen === rep.id ? null : rep.id)}
                   onDuplicate={() => duplicateMutation.mutate(rep.id)}
-                  onDelete={() => { if (confirm('Excluir este repertório?')) deleteMutation.mutate(rep.id); }}
+                  onDelete={async () => {
+                    const ok = await confirm({
+                      title: 'Excluir repertório',
+                      message: `"${rep.title}" será removido permanentemente. Esta ação não pode ser desfeita.`,
+                      confirmLabel: 'Excluir',
+                      variant: 'danger',
+                      icon: 'trash',
+                    });
+                    if (ok) deleteMutation.mutate(rep.id);
+                  }}
                   showActions
                 />
               ))}

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { LyricsFullscreen } from './LyricsFullscreen';
 import { ShareRepertoryModal } from './ShareRepertoryModal';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface RepertoryViewProps {
   repertory: Repertory & { items: any[]; creator: any };
@@ -25,6 +26,7 @@ interface RepertoryViewProps {
 export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryViewProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [fullscreenSong, setFullscreenSong] = useState<{ title: string; lyrics: string } | null>(null);
   const [showShare, setShowShare] = useState(false);
@@ -33,7 +35,14 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
   const canDelete = isOwner || can(role, 'repertories:edit:any');
 
   async function handleDelete() {
-    if (!confirm('Excluir este repertório permanentemente?')) return;
+    const ok = await confirm({
+      title: 'Excluir repertório',
+      message: `"${repertory.title}" será excluído permanentemente. Todas as músicas do repertório serão removidas.`,
+      confirmLabel: 'Excluir',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
     const { error } = await supabase.from('repertories').delete().eq('id', repertory.id);
     if (error) { toast.error('Erro ao excluir.'); return; }
     toast.success('Repertório excluído.');
@@ -46,6 +55,7 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
 
   return (
     <>
+      {ConfirmDialogNode}
       {/* Modal de letra em tela cheia */}
       {fullscreenSong && (
         <LyricsFullscreen

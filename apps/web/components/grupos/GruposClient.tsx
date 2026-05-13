@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { can } from '@rl/utils';
 import type { UserRole } from '@rl/types';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 interface Group {
   id: string;
@@ -30,6 +31,7 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
   const canCreate = can(role, 'groups:create');
   const router = useRouter();
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -74,7 +76,14 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
   }
 
   async function handleLeave(groupId: string) {
-    if (!confirm('Sair deste grupo?')) return;
+    const ok = await confirm({
+      title: 'Sair do grupo',
+      message: 'Você perderá acesso aos repertórios compartilhados com este grupo. Deseja continuar?',
+      confirmLabel: 'Sair do grupo',
+      variant: 'warning',
+      icon: 'logout',
+    });
+    if (!ok) return;
     const { error } = await supabase
       .from('team_members')
       .delete()
@@ -86,7 +95,14 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
   }
 
   async function handleDelete(groupId: string) {
-    if (!confirm('Excluir este grupo permanentemente? Todos os compartilhamentos serão removidos.')) return;
+    const ok = await confirm({
+      title: 'Excluir grupo',
+      message: 'Esta ação é permanente. Todos os membros perderão acesso e os compartilhamentos serão removidos.',
+      confirmLabel: 'Excluir grupo',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
     const { error } = await supabase.from('teams').delete().eq('id', groupId);
     if (error) { toast.error('Erro ao excluir grupo.'); return; }
     toast.success('Grupo excluído.');
@@ -138,6 +154,7 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialogNode}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
