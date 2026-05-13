@@ -59,20 +59,22 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
     setSearchResult(null);
     try {
       const { data, error } = await supabase
-        .from('users')
-        .select('id, full_name, email, avatar_url')
-        .ilike('email', searchEmail.trim())
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) {
+        .rpc('search_user_by_email', { p_email: searchEmail.trim() });
+      if (error) {
+        console.error('[searchUser] RPC error:', error);
+        throw error;
+      }
+      const user = Array.isArray(data) ? data[0] : data;
+      if (!user) {
         toast.error('Nenhum usuário encontrado com este e-mail.');
-      } else if (group.members.some(m => m.user_id === data.id)) {
+      } else if (group.members.some(m => m.user_id === user.id)) {
         toast.error('Este usuário já é membro do grupo.');
       } else {
-        setSearchResult(data);
+        setSearchResult(user);
       }
-    } catch {
-      toast.error('Erro ao buscar usuário.');
+    } catch (e: any) {
+      console.error('[searchUser] Erro:', e);
+      toast.error(e?.message ?? 'Erro ao buscar usuário.');
     } finally {
       setSearching(false);
     }
@@ -83,16 +85,19 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
     setAdding(true);
     try {
       const { error } = await supabase
-        .from('team_members')
-        .insert({ team_id: group.id, user_id: searchResult.id, role: 'member' });
-      if (error) throw error;
+        .rpc('add_team_member', { p_team_id: group.id, p_user_id: searchResult.id });
+      if (error) {
+        console.error('[addMember] RPC error:', error);
+        throw error;
+      }
       toast.success(`${searchResult.full_name} adicionado ao grupo!`);
       setShowAddMember(false);
       setSearchEmail('');
       setSearchResult(null);
       router.refresh();
-    } catch {
-      toast.error('Erro ao adicionar membro.');
+    } catch (e: any) {
+      console.error('[addMember] Erro:', e);
+      toast.error(e?.message ?? 'Erro ao adicionar membro.');
     } finally {
       setAdding(false);
     }

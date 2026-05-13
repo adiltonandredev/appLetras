@@ -5,7 +5,7 @@ import { getCurrentRole } from '@/lib/auth/permissions';
 import { can } from '@rl/utils';
 import {
   Music, BookOpen, ClipboardCheck, Plus, ArrowRight,
-  Users, Tag, CalendarDays, User, ListMusic, PlusCircle, ChevronRight,
+  Users, Tag, CalendarDays, User, ListMusic, PlusCircle, ChevronRight, BookMarked,
 } from 'lucide-react';
 // Music, BookOpen, ClipboardCheck também usados em statsData via iconName string
 import Link from 'next/link';
@@ -26,11 +26,21 @@ export default async function DashboardPage() {
   const isAdmin = can(role, 'users:view');
   const isPadrao = role === 'padrao';
 
+  // Para usuário padrão: busca IDs de repertórios compartilhados via RPC (SECURITY DEFINER)
+  let sharedRepIds: string[] = [];
+  if (isPadrao) {
+    const { data: rpcResult } = await supabase
+      .rpc('get_shared_repertory_ids', { p_user_id: session.user.id });
+    sharedRepIds = (rpcResult ?? []).map((r: any) => r.repertory_id as string).filter(Boolean);
+  }
+
   const [songsResult, repertoriesResult, pendingResult] = await Promise.all([
     supabase.from('songs').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
     isAdmin
       ? supabase.from('repertories').select('id', { count: 'exact', head: true })
-      : supabase.from('repertories').select('id', { count: 'exact', head: true }).eq('created_by', session.user.id),
+      : isPadrao
+        ? Promise.resolve({ count: sharedRepIds.length, error: null })
+        : supabase.from('repertories').select('id', { count: 'exact', head: true }).eq('created_by', session.user.id),
     can(role, 'songs:approve')
       ? supabase.from('song_approvals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
       : Promise.resolve({ count: 0, error: null }),
@@ -39,20 +49,25 @@ export default async function DashboardPage() {
   const [recentRepertories, recentSongs] = await Promise.all([
     isAdmin
       ? supabase.from('repertories').select('id, title, celebration, event_date, created_at').order('created_at', { ascending: false }).limit(4)
-      : supabase.from('repertories').select('id, title, celebration, event_date, created_at').eq('created_by', session.user.id).order('created_at', { ascending: false }).limit(4),
+      : isPadrao
+        ? sharedRepIds.length > 0
+          ? supabase.from('repertories').select('id, title, celebration, event_date, created_at').in('id', sharedRepIds).order('event_date', { ascending: false }).limit(4)
+          : Promise.resolve({ data: [], error: null })
+        : supabase.from('repertories').select('id, title, celebration, event_date, created_at').eq('created_by', session.user.id).order('created_at', { ascending: false }).limit(4),
     supabase.from('songs').select('id, title, created_at, key_note').eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
   ]);
 
   const quickLinks = [
-    { label: 'Nova Música',    href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
-    { label: 'Novo Repertório', href: '/repertorios/novo',  icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
-    { label: 'Músicas',        href: '/musicas',            icon: Music,          color: 'text-blue-600',    bg: 'bg-blue-50',    show: true },
-    { label: 'Repertórios',    href: '/repertorios',        icon: BookOpen,       color: 'text-violet-600',  bg: 'bg-violet-50',  show: true },
-    { label: 'Aprovações',     href: '/admin/aprovacoes',   icon: ClipboardCheck, color: 'text-amber-600',   bg: 'bg-amber-50',   show: can(role, 'songs:approve') },
-    { label: 'Usuários',       href: '/admin/usuarios',     icon: Users,          color: 'text-rose-600',    bg: 'bg-rose-50',    show: can(role, 'users:view') },
-    { label: 'Categorias',     href: '/admin/categorias',   icon: Tag,            color: 'text-teal-600',    bg: 'bg-teal-50',    show: can(role, 'categories:create') },
-    { label: 'Celebrações',    href: '/admin/celebracoes',  icon: CalendarDays,   color: 'text-indigo-600',  bg: 'bg-indigo-50',  show: can(role, 'categories:create') },
-    { label: 'Perfil',         href: '/perfil',             icon: User,           color: 'text-gray-500',    bg: 'bg-gray-100',   show: true },
+    { label: 'Nova Música',     href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
+    { label: 'Novo Repertório', href: '/repertorios/novo',   icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
+    { label: 'Músicas',         href: '/musicas',             icon: Music,          color: 'text-blue-600',    bg: 'bg-blue-50',    show: true },
+    { label: 'Repertórios',     href: '/repertorios',         icon: BookOpen,       color: 'text-violet-600',  bg: 'bg-violet-50',  show: true },
+    { label: 'Liturgia do Dia', href: liturgiaUrl,            icon: BookMarked,     color: 'text-orange-600',  bg: 'bg-orange-50',  show: true, external: true },
+    { label: 'Aprovações',      href: '/admin/aprovacoes',    icon: ClipboardCheck, color: 'text-amber-600',   bg: 'bg-amber-50',   show: can(role, 'songs:approve') },
+    { label: 'Usuários',        href: '/admin/usuarios',      icon: Users,          color: 'text-rose-600',    bg: 'bg-rose-50',    show: can(role, 'users:view') },
+    { label: 'Categorias',      href: '/admin/categorias',    icon: Tag,            color: 'text-teal-600',    bg: 'bg-teal-50',    show: can(role, 'categories:create') },
+    { label: 'Celebrações',     href: '/admin/celebracoes',   icon: CalendarDays,   color: 'text-indigo-600',  bg: 'bg-indigo-50',  show: can(role, 'categories:create') },
+    { label: 'Perfil',          href: '/perfil',              icon: User,           color: 'text-gray-500',    bg: 'bg-gray-100',   show: true },
   ].filter(l => l.show);
 
   const statsData: StatItem[] = [
@@ -61,8 +76,15 @@ export default async function DashboardPage() {
     ...(can(role, 'songs:approve') ? [{ label: 'Aguardando aprovação', value: (pendingResult as any).count ?? 0, iconName: 'ClipboardCheck' as const, color: 'text-amber-500', bg: 'bg-amber-50' }] : []),
   ];
 
-  const hour = new Date().getHours();
+  const now = new Date();
+  const hour = now.getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+
+  // URL da Liturgia do Dia — navega direto para a data atual
+  const yyyy = now.getFullYear();
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const dd   = String(now.getDate()).padStart(2, '0');
+  const liturgiaUrl = `https://liturgia.cancaonova.com/pb/${yyyy}/${mm}/${dd}/`;
 
   return (
     <div className="max-w-2xl lg:max-w-6xl mx-auto space-y-6">
@@ -79,21 +101,39 @@ export default async function DashboardPage() {
       <div className="card p-4 sm:p-6">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Acesso Rápido</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3 sm:gap-4">
-          {quickLinks.map((link, i) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="quick-icon"
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <div className={`quick-icon-box ${link.bg}`}>
-                <link.icon className={`w-8 h-8 sm:w-7 sm:h-7 ${link.color}`} />
-              </div>
-              <span className={`text-xs font-semibold text-center leading-tight ${link.color}`}>
-                {link.label}
-              </span>
-            </Link>
-          ))}
+          {quickLinks.map((link, i) => {
+            const inner = (
+              <>
+                <div className={`quick-icon-box ${link.bg}`}>
+                  <link.icon className={`w-8 h-8 sm:w-7 sm:h-7 ${link.color}`} />
+                </div>
+                <span className={`text-xs font-semibold text-center leading-tight ${link.color}`}>
+                  {link.label}
+                </span>
+              </>
+            );
+            return link.external ? (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="quick-icon"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                {inner}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="quick-icon"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                {inner}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -110,13 +150,15 @@ export default async function DashboardPage() {
                 <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
               </div>
               <span className="font-semibold text-gray-800 text-sm">
-                {isAdmin ? 'Últimos Repertórios' : 'Meus Repertórios'}
+                {isAdmin ? 'Últimos Repertórios' : isPadrao ? 'Repertórios Compartilhados' : 'Meus Repertórios'}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <Link href="/repertorios/novo" className="btn-primary py-1 px-2.5 text-xs">
-                <Plus className="w-3 h-3" />
-              </Link>
+              {!isPadrao && (
+                <Link href="/repertorios/novo" className="btn-primary py-1 px-2.5 text-xs">
+                  <Plus className="w-3 h-3" />
+                </Link>
+              )}
               <Link href="/repertorios" className="btn-ghost p-1.5">
                 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -126,8 +168,12 @@ export default async function DashboardPage() {
             {recentRepertories.data?.length === 0 ? (
               <div className="py-10 text-center">
                 <BookOpen className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Nenhum repertório ainda.</p>
-                <Link href="/repertorios/novo" className="text-xs text-brand-600 font-semibold mt-1.5 inline-block">Criar o primeiro →</Link>
+                <p className="text-sm text-gray-400">
+                  {isPadrao ? 'Nenhum repertório compartilhado ainda.' : 'Nenhum repertório ainda.'}
+                </p>
+                {!isPadrao && (
+                  <Link href="/repertorios/novo" className="text-xs text-brand-600 font-semibold mt-1.5 inline-block">Criar o primeiro →</Link>
+                )}
               </div>
             ) : recentRepertories.data?.map((r) => (
               <Link key={r.id} href={`/repertorios/${r.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">

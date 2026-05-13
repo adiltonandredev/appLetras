@@ -65,7 +65,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
           <p className="text-gray-500 text-sm mt-0.5">
             {isPadrao
               ? `${shared.length} repertório${shared.length !== 1 ? 's' : ''} compartilhado${shared.length !== 1 ? 's' : ''} com você`
-              : `${data?.count ?? 0} repertório${data?.count !== 1 ? 's' : ''}`}
+              : `${data?.count ?? 0} criado${data?.count !== 1 ? 's' : ''}${shared.length > 0 ? ` · ${shared.length} compartilhado${shared.length !== 1 ? 's' : ''}` : ''}`}
           </p>
         </div>
         {canCreate && (
@@ -144,41 +144,48 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
         </section>
       )}
 
-      {/* ── Compartilhados comigo ── */}
-      {(loadingShared || shared.length > 0 || isPadrao) && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            {isPadrao ? 'Repertórios disponíveis para você' : 'Compartilhados comigo'}
-          </h2>
+      {/* ── Compartilhados comigo — sempre visível ── */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
+          <Share2 className="w-4 h-4" />
+          {isPadrao ? 'Repertórios disponíveis para você' : 'Compartilhados comigo'}
+        </h2>
 
-          {loadingShared ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {[1, 2].map(i => (
-                <div key={i} className="card p-5 animate-pulse">
-                  <div className="h-5 bg-gray-100 rounded w-2/3 mb-3" />
-                  <div className="h-4 bg-gray-100 rounded w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {shared.map((rep) => (
-                <RepertoryCard
-                  key={rep.id}
-                  repertory={rep}
-                  menuOpen={false}
-                  onMenuToggle={() => {}}
-                  onDuplicate={() => {}}
-                  onDelete={() => {}}
-                  showActions={false}
-                  sharedBadge
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
+        {loadingShared ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2].map(i => (
+              <div key={i} className="card p-5 animate-pulse">
+                <div className="h-5 bg-gray-100 rounded w-2/3 mb-3" />
+                <div className="h-4 bg-gray-100 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : shared.length === 0 ? (
+          <div className="card p-10 text-center">
+            <Share2 className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">
+              {isPadrao
+                ? 'Nenhum repertório foi compartilhado com você ainda.'
+                : 'Nenhum repertório compartilhado com você ainda.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {shared.map((rep) => (
+              <RepertoryCard
+                key={rep.id}
+                repertory={rep}
+                menuOpen={false}
+                onMenuToggle={() => {}}
+                onDuplicate={() => {}}
+                onDelete={() => {}}
+                showActions={false}
+                sharedBadge
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

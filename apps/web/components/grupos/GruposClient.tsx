@@ -53,6 +53,13 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
         .single();
 
       if (error) throw error;
+
+      // Adiciona o criador como membro admin para aparecer no painel e nas queries de grupo
+      const { error: memberError } = await supabase
+        .from('team_members')
+        .insert({ team_id: data.id, user_id: userId, role: 'admin' });
+      if (memberError) console.warn('[handleCreate] Erro ao adicionar criador como membro:', memberError);
+
       toast.success('Grupo criado!');
       setShowCreate(false);
       setName('');

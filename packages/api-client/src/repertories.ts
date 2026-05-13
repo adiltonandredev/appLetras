@@ -216,34 +216,28 @@ export async function duplicateRepertory(
   return copy;
 }
 
-/** Repertórios compartilhados diretamente com o usuário ou com grupos do usuário */
+/** Repertórios compartilhados diretamente com o usuário ou com grupos do usuário.
+ *  Usa RPC SECURITY DEFINER para contornar problemas de RLS recursivo. */
 export async function getSharedRepertories(
   client: SupabaseClient,
   userId: string
 ): Promise<Repertory[]> {
-  // 1. IDs de grupos que o usuário pertence
-  const { data: memberships } = await client
-    .from('team_members')
-    .select('team_id')
-    .eq('user_id', userId);
-  const teamIds = (memberships ?? []).map((m: any) => m.team_id);
+  // 1. Busca IDs via RPC (SECURITY DEFINER — sem RLS recursivo)
+  const { data: rpcResult, error: rpcError } = await client
+    .rpc('get_shared_repertory_ids', { p_user_id: userId });
 
-  // 2. Shares diretos (user) ou via grupo
-  let sharesQuery = client
-    .from('shared_repertories')
-    .select('repertory_id')
-    .neq('repertory_id', null);
+  if (rpcError) {
+    console.error('[getSharedRepertories] RPC error:', rpcError);
+    return [];
+  }
 
-  // filtra: shared_with = user OU team_id em grupos do usuário
-  const orParts = [`shared_with.eq.${userId}`];
-  if (teamIds.length) orParts.push(`team_id.in.(${teamIds.join(',')})`);
-  sharesQuery = sharesQuery.or(orParts.join(','));
+  const repIds = (rpcResult ?? [])
+    .map((r: any) => r.repertory_id as string)
+    .filter(Boolean);
 
-  const { data: shares } = await sharesQuery;
-  const repIds = [...new Set((shares ?? []).map((s: any) => s.repertory_id))];
   if (!repIds.length) return [];
 
-  // 3. Busca os repertórios (excluindo os criados pelo próprio usuário)
+  // 2. Busca os repertórios (excluindo os criados pelo próprio usuário)
   const { data, error } = await client
     .from('repertories')
     .select('*, creator:users!created_by(id, full_name, avatar_url)')
@@ -251,7 +245,10 @@ export async function getSharedRepertories(
     .neq('created_by', userId)
     .order('event_date', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[getSharedRepertories] Fetch error:', error);
+    throw error;
+  }
   return data ?? [];
 }
 
