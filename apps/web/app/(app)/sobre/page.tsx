@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { Heart, Code2, Mail, Phone, ExternalLink } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 
-export const metadata: Metadata = { title: 'Sobre o App' };
+export const metadata: Metadata = { title: 'Sobre' };
 
 const SOCIAL_LINKS = [
   {
@@ -9,12 +9,6 @@ const SOCIAL_LINKS = [
     href: 'https://instagram.com/adiltonandremcs',
     bg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400',
     icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>,
-  },
-  {
-    label: 'Facebook',
-    href: 'https://facebook.com/adiltonandre',
-    bg: 'bg-[#1877F2]',
-    icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
   },
   {
     label: 'WhatsApp',
@@ -36,122 +30,68 @@ const SOCIAL_LINKS = [
   },
 ];
 
-const TECH_STACK = [
-  { name: 'Next.js 14',   desc: 'Frontend',    emoji: '⚡' },
-  { name: 'Supabase',     desc: 'Backend/DB',  emoji: '🗄️' },
-  { name: 'TypeScript',   desc: 'Linguagem',   emoji: '🔷' },
-  { name: 'Tailwind CSS', desc: 'Estilo',      emoji: '🎨' },
-  { name: 'Turborepo',    desc: 'Monorepo',    emoji: '🚀' },
-  { name: 'Vercel',       desc: 'Deploy',      emoji: '▲' },
-];
-
 export default function SobrePage() {
   return (
-    <div className="max-w-lg mx-auto space-y-4 pb-10">
+    <div className="max-w-sm mx-auto flex flex-col items-center text-center gap-6 pt-6 pb-12">
 
-      {/* ── App Hero ─────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 text-white">
-        <div className="pointer-events-none absolute -right-10 -top-10 w-52 h-52 rounded-full bg-white/5" />
-        <div className="pointer-events-none absolute right-8 bottom-0 w-28 h-28 rounded-full bg-gold-400/20" />
-
-        <div className="relative p-6 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-4xl">🎵</span>
-          </div>
-          <h1 className="text-2xl font-black font-serif">APPLetras</h1>
-          <p className="text-white/50 text-xs tracking-widest uppercase mt-1 font-medium">Repertório Litúrgico</p>
-          <p className="text-white/60 text-sm mt-3 leading-relaxed">
-            Plataforma para gerenciamento de músicas e repertórios litúrgicos — organizada e feita com cuidado para grupos de louvor.
-          </p>
-          <div className="mt-4 inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs font-medium text-white/70 border border-white/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            v1.0 · {new Date().getFullYear()}
-          </div>
-        </div>
+      {/* Logo */}
+      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-800 to-brand-600 flex items-center justify-center shadow-lg">
+        <span className="text-4xl">🎵</span>
       </div>
 
-      {/* ── Desenvolvedor ────────────────────────── */}
-      <div className="card overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-brand-600 via-gold-400 to-brand-500" />
-        <div className="p-5">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-4">
-            <Code2 className="w-3.5 h-3.5" /> Desenvolvedor
-          </p>
+      {/* App info */}
+      <div>
+        <h1 className="text-2xl font-black font-serif text-brand-900">APPLetras</h1>
+        <p className="text-xs text-gray-400 uppercase tracking-widest font-medium mt-0.5">Repertório Litúrgico</p>
+        <p className="text-sm text-gray-500 mt-3 leading-relaxed">
+          Plataforma para gerenciamento de músicas e repertórios litúrgicos para grupos de louvor.
+        </p>
+      </div>
 
-          {/* Card do dev */}
-          <div className="flex items-center gap-4 mb-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-700 to-gold-400 flex items-center justify-center text-white font-black text-2xl shadow-md shrink-0">
-              A
-            </div>
-            <div>
-              <p className="text-lg font-black text-gray-900">Adilton André</p>
-              <p className="text-xs text-gray-400 font-medium">Desenvolvedor Full Stack</p>
-            </div>
-          </div>
+      <div className="w-10 h-px bg-gray-200" />
 
-          {/* Contatos */}
-          <div className="space-y-2 mb-5">
+      {/* Desenvolvedor */}
+      <div>
+        <p className="text-xs text-gray-400 uppercase tracking-widest font-medium mb-3">Desenvolvido por</p>
+        <p className="text-xl font-black text-gray-900">Adilton André</p>
+
+        <div className="flex flex-col gap-2 mt-4">
+          <a
+            href="mailto:adiltonandre@gmail.com"
+            className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-brand-600 transition-colors"
+          >
+            <Mail className="w-4 h-4" />
+            adiltonandre@gmail.com
+          </a>
+          <a
+            href="https://wa.me/5569999772514"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-[#25D366] transition-colors"
+          >
+            <Phone className="w-4 h-4" />
+            +55 (69) 99977-2514
+          </a>
+        </div>
+
+        {/* Redes sociais */}
+        <div className="flex items-center justify-center gap-3 mt-5">
+          {SOCIAL_LINKS.map((s) => (
             <a
-              href="mailto:adiltonandre@gmail.com"
-              className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-brand-50 border border-transparent hover:border-brand-100 transition-all group"
-            >
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-gray-400 group-hover:text-brand-600 transition-colors" />
-                <span className="text-sm text-gray-600 group-hover:text-brand-700 font-medium transition-colors">adiltonandre@gmail.com</span>
-              </div>
-              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-brand-400 transition-colors" />
-            </a>
-            <a
-              href="https://wa.me/5569999772514"
+              key={s.label}
+              href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-[#25D366]/5 border border-transparent hover:border-[#25D366]/20 transition-all group"
+              aria-label={s.label}
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white ${s.bg} hover:scale-110 active:scale-95 transition-transform shadow-sm`}
             >
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-gray-400 group-hover:text-[#25D366] transition-colors" />
-                <span className="text-sm text-gray-600 font-medium">+55 (69) 99977-2514</span>
-              </div>
-              <ExternalLink className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#25D366] transition-colors" />
+              {s.icon}
             </a>
-          </div>
-
-          {/* Redes sociais */}
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Redes sociais</p>
-          <div className="flex gap-3">
-            {SOCIAL_LINKS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                title={s.label}
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white ${s.bg} hover:scale-110 active:scale-95 transition-transform shadow-sm`}
-              >
-                {s.icon}
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Tecnologias ──────────────────────────── */}
-      <div className="card p-5">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mb-4">
-          <Heart className="w-3.5 h-3.5 text-rose-400" /> Feito com
-        </p>
-        <div className="grid grid-cols-3 gap-2">
-          {TECH_STACK.map((t) => (
-            <div key={t.name} className="p-3 rounded-xl bg-gray-50 border border-gray-100 text-center hover:border-brand-200 hover:bg-brand-50/30 transition-colors">
-              <p className="text-xl mb-1">{t.emoji}</p>
-              <p className="text-xs font-bold text-gray-800 leading-tight">{t.name}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{t.desc}</p>
-            </div>
           ))}
         </div>
       </div>
 
-      <p className="text-center text-[11px] text-gray-300 pb-2">
+      <p className="text-xs text-gray-300">
         © {new Date().getFullYear()} APPLetras · Todos os direitos reservados
       </p>
     </div>
