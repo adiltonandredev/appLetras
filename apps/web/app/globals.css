@@ -46,41 +46,70 @@
   }
 }
 
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.92); }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float-up {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
            bg-gradient-to-r from-gold-400 to-gold-500 text-gray-900 font-semibold text-sm
-           hover:from-gold-300 hover:to-gold-400 active:from-gold-500 active:to-gold-600
+           hover:from-gold-300 hover:to-gold-400
+           hover:-translate-y-0.5 hover:shadow-md
+           active:scale-95 active:translate-y-0
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-150;
+           transition-all duration-150;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
            bg-white text-gray-700 font-semibold text-sm border border-gray-200
-           hover:bg-gray-50 active:bg-gray-100
+           hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-sm
+           active:scale-95 active:translate-y-0
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-150;
+           transition-all duration-150;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg
            text-gray-600 font-medium text-sm
-           hover:bg-gray-100 active:bg-gray-200
+           hover:bg-gray-100
+           active:scale-95
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-150;
+           transition-all duration-150;
   }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
            bg-red-600 text-white font-semibold text-sm
-           hover:bg-red-500 active:bg-red-700
+           hover:bg-red-500 hover:-translate-y-0.5 hover:shadow-md
+           active:scale-95 active:translate-y-0
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-150;
+           transition-all duration-150;
   }
 
   .input {
@@ -88,8 +117,9 @@
            border border-gray-300 bg-white text-gray-900 text-sm
            placeholder:text-gray-400
            focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400
+           focus:scale-[1.01]
            disabled:bg-gray-50 disabled:text-gray-500
-           transition-shadow duration-150;
+           transition-all duration-150;
   }
 
   .label {
@@ -98,6 +128,33 @@
 
   .card {
     @apply bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 shadow-card;
+  }
+
+  /* Card com hover animado */
+  .card-interactive {
+    @apply bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 shadow-card
+           hover:-translate-y-1 hover:shadow-lg
+           transition-all duration-200 cursor-pointer;
+  }
+
+  /* Ícone de acesso rápido — animação de app */
+  .quick-icon {
+    @apply flex flex-col items-center gap-2 select-none;
+  }
+
+  .quick-icon-box {
+    @apply w-full aspect-square rounded-2xl flex items-center justify-center shadow-sm
+           transition-all duration-200 ease-out
+           hover:-translate-y-1 hover:shadow-md
+           active:scale-90;
+  }
+
+  .quick-icon-box:hover {
+    animation: float-up 1.5s ease-in-out infinite;
+  }
+
+  .quick-icon-box:active {
+    animation: pop 0.25s ease-out forwards;
   }
 
   .badge {
@@ -110,6 +167,11 @@
 
   .page-title {
     @apply text-2xl font-bold text-gray-900;
+  }
+
+  /* Animação de entrada */
+  .fade-in-up {
+    animation: fade-in-up 0.35s ease-out both;
   }
 }
 
