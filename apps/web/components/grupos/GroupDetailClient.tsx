@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { formatDate } from '@rl/utils';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface Member {
   user_id: string;
@@ -92,6 +93,7 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
         console.error('[addMember] RPC error:', error);
         throw error;
       }
+      logAudit({ action: 'member_added', entity_type: 'group', entity_id: group.id, new_value: { member_name: searchResult.full_name, group_name: group.name } });
       toast.success(`${searchResult.full_name} adicionado ao grupo!`);
       setShowAddMember(false);
       setSearchEmail('');
@@ -120,6 +122,7 @@ export function GroupDetailClient({ group, sharedRepertories, userId, isOwner }:
       .eq('team_id', group.id)
       .eq('user_id', memberId);
     if (error) { toast.error('Erro ao remover membro.'); return; }
+    logAudit({ action: 'member_removed', entity_type: 'group', entity_id: group.id, old_value: { member_name: memberName, group_name: group.name } });
     toast.success(`${memberName} removido.`);
     router.refresh();
   }

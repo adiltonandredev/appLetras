@@ -7,6 +7,7 @@ import { Plus, Edit2, Trash2, GripVertical, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface Category {
   id: string;
@@ -54,6 +55,7 @@ export function CategoriesAdminClient({ categories: initial }: Props) {
 
       if (error) throw error;
       setCategories(prev => [...prev, data]);
+      logAudit({ action: 'category_created', entity_type: 'category', entity_id: data.id, new_value: { name: data.name, icon: data.icon } });
       setNewCat({ name: '', icon: '🎵' });
       setCreating(false);
       toast.success('Categoria criada.');
@@ -81,6 +83,7 @@ export function CategoriesAdminClient({ categories: initial }: Props) {
       setCategories(prev => prev.map(c =>
         c.id === id ? { ...c, name: editState.name.trim(), icon: editState.icon, slug: slugify(editState.name) } : c
       ));
+      logAudit({ action: 'category_updated', entity_type: 'category', entity_id: id, new_value: { name: editState.name.trim(), icon: editState.icon } });
       setEditing(null);
       toast.success('Categoria atualizada.');
     } catch (err: any) {
@@ -107,6 +110,7 @@ export function CategoriesAdminClient({ categories: initial }: Props) {
 
       if (error) throw error;
       setCategories(prev => prev.filter(c => c.id !== cat.id));
+      logAudit({ action: 'category_deleted', entity_type: 'category', entity_id: cat.id, old_value: { name: cat.name } });
       toast.success('Categoria excluída.');
     } catch (err: any) {
       toast.error('Erro: ' + err.message);

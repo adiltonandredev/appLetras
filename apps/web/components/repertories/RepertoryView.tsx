@@ -15,6 +15,7 @@ import { clsx } from 'clsx';
 import { LyricsFullscreen } from './LyricsFullscreen';
 import { ShareRepertoryModal } from './ShareRepertoryModal';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface RepertoryViewProps {
   repertory: Repertory & { items: any[]; creator: any };
@@ -45,6 +46,7 @@ export function RepertoryView({ repertory, role, isOwner, userId }: RepertoryVie
     if (!ok) return;
     const { error } = await supabase.from('repertories').delete().eq('id', repertory.id);
     if (error) { toast.error('Erro ao excluir.'); return; }
+    logAudit({ action: 'repertory_deleted', entity_type: 'repertory', entity_id: repertory.id, old_value: { title: repertory.title } });
     toast.success('Repertório excluído.');
     router.push('/repertorios');
   }

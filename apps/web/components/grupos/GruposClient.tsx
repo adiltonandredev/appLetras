@@ -10,6 +10,7 @@ import { clsx } from 'clsx';
 import { can } from '@rl/utils';
 import type { UserRole } from '@rl/types';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface Group {
   id: string;
@@ -62,6 +63,7 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
         .insert({ team_id: data.id, user_id: userId, role: 'admin' });
       if (memberError) console.warn('[handleCreate] Erro ao adicionar criador como membro:', memberError);
 
+      logAudit({ action: 'group_created', entity_type: 'group', entity_id: data.id, new_value: { name: data.name } });
       toast.success('Grupo criado!');
       setShowCreate(false);
       setName('');
@@ -103,8 +105,10 @@ export function GruposClient({ myGroups, memberGroups, userId, role }: Props) {
       icon: 'trash',
     });
     if (!ok) return;
+    const group = [...myGroups].find(g => g.id === groupId);
     const { error } = await supabase.from('teams').delete().eq('id', groupId);
     if (error) { toast.error('Erro ao excluir grupo.'); return; }
+    logAudit({ action: 'group_deleted', entity_type: 'group', entity_id: groupId, old_value: { name: group?.name } });
     toast.success('Grupo excluído.');
     router.refresh();
   }

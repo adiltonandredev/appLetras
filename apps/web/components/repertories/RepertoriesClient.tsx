@@ -10,6 +10,7 @@ import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Shar
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface RepertoriesClientProps {
   userId: string;
@@ -51,8 +52,9 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteRepertory(supabase, id),
-    onSuccess: () => {
+    mutationFn: ({ id, title }: { id: string; title: string }) => deleteRepertory(supabase, id),
+    onSuccess: (_, { id, title }) => {
+      logAudit({ action: 'repertory_deleted', entity_type: 'repertory', entity_id: id, old_value: { title } });
       queryClient.invalidateQueries({ queryKey: ['repertories'] });
       toast.success('Repertório excluído.');
     },
@@ -60,8 +62,9 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   });
 
   const duplicateMutation = useMutation({
-    mutationFn: (id: string) => duplicateRepertory(supabase, id, userId),
-    onSuccess: () => {
+    mutationFn: ({ id }: { id: string; title: string }) => duplicateRepertory(supabase, id, userId),
+    onSuccess: (result, { title }) => {
+      logAudit({ action: 'repertory_created', entity_type: 'repertory', entity_id: result.id, new_value: { title: result.title, duplicated_from: title } });
       queryClient.invalidateQueries({ queryKey: ['repertories'] });
       toast.success('Repertório duplicado!');
     },
@@ -164,7 +167,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
                   repertory={rep}
                   menuOpen={menuOpen === rep.id}
                   onMenuToggle={() => setMenuOpen(menuOpen === rep.id ? null : rep.id)}
-                  onDuplicate={() => duplicateMutation.mutate(rep.id)}
+                  onDuplicate={() => duplicateMutation.mutate({ id: rep.id, title: rep.title })}
                   onDelete={async () => {
                     const ok = await confirm({
                       title: 'Excluir repertório',
@@ -173,7 +176,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
                       variant: 'danger',
                       icon: 'trash',
                     });
-                    if (ok) deleteMutation.mutate(rep.id);
+                    if (ok) deleteMutation.mutate({ id: rep.id, title: rep.title });
                   }}
                   showActions
                   isPast={isHistory}

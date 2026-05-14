@@ -30,6 +30,20 @@ const ACTION_LABELS: Record<string, string> = {
   role_removed:             'Perfil removido',
   user_deactivated:         'Usuário desativado',
   user_activated:           'Usuário reativado',
+  user_deleted:             'Usuário excluído',
+  // Groups - members
+  member_added:             'Membro adicionado',
+  member_removed:           'Membro removido',
+  // Categories
+  category_created:         'Categoria criada',
+  category_updated:         'Categoria editada',
+  category_deleted:         'Categoria excluída',
+  // Celebration types
+  celebration_type_created:     'Tipo de celebração criado',
+  celebration_type_updated:     'Tipo de celebração editado',
+  celebration_type_deleted:     'Tipo de celebração excluído',
+  celebration_type_activated:   'Tipo de celebração ativado',
+  celebration_type_deactivated: 'Tipo de celebração desativado',
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -51,6 +65,17 @@ const ACTION_COLORS: Record<string, string> = {
   role_removed:             '#8B5CF6',
   user_deactivated:         '#EF4444',
   user_activated:           '#10B981',
+  user_deleted:             '#EF4444',
+  member_added:             '#06B6D4',
+  member_removed:           '#F97316',
+  category_created:         '#10B981',
+  category_updated:         '#3B82F6',
+  category_deleted:         '#EF4444',
+  celebration_type_created:     '#10B981',
+  celebration_type_updated:     '#3B82F6',
+  celebration_type_deleted:     '#EF4444',
+  celebration_type_activated:   '#10B981',
+  celebration_type_deactivated: '#6B7280',
 };
 
 export default async function AdminLogsPage({

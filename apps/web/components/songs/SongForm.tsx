@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
 import { createSong, updateSong, submitSongForReview } from '@rl/api-client';
+import { logAudit } from '@/lib/audit-client';
 import { KEY_NOTES } from '@rl/utils';
 import type { LiturgicalCategory, Song, UserRole } from '@rl/types';
 import { Save, Send, Loader2, Plus, X, Info, Link2 } from 'lucide-react';
@@ -180,14 +181,16 @@ export function SongForm({ categories, mode, song, userRole }: SongFormProps) {
         const created = await createSong(supabase, payload, user.id);
         if (submitForReview) {
           if (isAdmin) {
-            // Admin: aprova diretamente sem fila de aprovação
             await supabase.from('songs').update({ status: 'approved', updated_by: user.id }).eq('id', created.id);
+            logAudit({ action: 'song_created', entity_type: 'song', entity_id: created.id, new_value: { title: created.title, status: 'approved' } });
             toast.success('Música publicada com sucesso!');
           } else {
             await submitSongForReview(supabase, created.id, user.id);
+            logAudit({ action: 'song_submitted', entity_type: 'song', entity_id: created.id, new_value: { title: created.title, status: 'pending' } });
             toast.success('Música enviada para aprovação!');
           }
         } else {
+          logAudit({ action: 'song_created', entity_type: 'song', entity_id: created.id, new_value: { title: created.title, status: 'draft' } });
           toast.success('Música salva como rascunho!');
         }
         router.push(`/musicas/${created.id}`);
@@ -196,12 +199,15 @@ export function SongForm({ categories, mode, song, userRole }: SongFormProps) {
         if (submitForReview) {
           if (isAdmin) {
             await supabase.from('songs').update({ status: 'approved', updated_by: user.id }).eq('id', song.id);
+            logAudit({ action: 'song_status_changed', entity_type: 'song', entity_id: song.id, old_value: { status: song.status }, new_value: { title: song.title, status: 'approved' } });
             toast.success('Música publicada com sucesso!');
           } else {
             await submitSongForReview(supabase, song.id, user.id);
+            logAudit({ action: 'song_submitted', entity_type: 'song', entity_id: song.id, new_value: { title: song.title } });
             toast.success('Música enviada para aprovação!');
           }
         } else {
+          logAudit({ action: 'song_updated', entity_type: 'song', entity_id: song.id, old_value: { title: song.title }, new_value: { title: data.title } });
           toast.success('Música atualizada!');
         }
         router.push(`/musicas/${song.id}`);

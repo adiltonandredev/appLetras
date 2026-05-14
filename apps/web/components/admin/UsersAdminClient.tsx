@@ -7,6 +7,7 @@ import { Search, UserCheck, UserX, ChevronDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface User {
   id: string;
@@ -66,9 +67,17 @@ export function UsersAdminClient({ users: initial, roles, currentUserId, canDele
       if (insError) throw insError;
 
       const newRole = roles.find(r => r.id === newRoleId) ?? null;
+      const oldUser = users.find(u => u.id === userId);
       setUsers(prev => prev.map(u =>
         u.id === userId ? { ...u, role: newRole } : u
       ));
+      logAudit({
+        action: 'role_changed',
+        entity_type: 'user',
+        entity_id: userId,
+        old_value: { role: oldUser?.role?.name },
+        new_value: { role: newRole?.name, user_name: oldUser?.full_name },
+      });
       toast.success('Perfil atualizado.');
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
@@ -94,6 +103,12 @@ export function UsersAdminClient({ users: initial, roles, currentUserId, canDele
       setUsers(prev => prev.map(u =>
         u.id === user.id ? { ...u, is_active: !u.is_active } : u
       ));
+      logAudit({
+        action: user.is_active ? 'user_deactivated' : 'user_activated',
+        entity_type: 'user',
+        entity_id: user.id,
+        new_value: { user_name: user.full_name, email: user.email },
+      });
       toast.success(user.is_active ? 'Usuário desativado.' : 'Usuário reativado.');
     } catch (err: any) {
       toast.error('Erro: ' + err.message);
@@ -123,6 +138,12 @@ export function UsersAdminClient({ users: initial, roles, currentUserId, canDele
       if (!res.ok) throw new Error(json.error ?? 'Erro ao excluir.');
 
       setUsers(prev => prev.filter(u => u.id !== user.id));
+      logAudit({
+        action: 'user_deleted',
+        entity_type: 'user',
+        entity_id: user.id,
+        old_value: { user_name: user.full_name, email: user.email, role: user.role?.name },
+      });
       toast.success(`Usuário "${user.full_name}" excluído.`);
     } catch (err: any) {
       toast.error('Erro: ' + err.message);

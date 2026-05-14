@@ -7,6 +7,7 @@ import { Plus, Edit2, Trash2, Check, X, GripVertical, ToggleLeft, ToggleRight } 
 import { toast } from 'sonner';
 import { clsx } from 'clsx';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { logAudit } from '@/lib/audit-client';
 
 interface CelebrationType {
   id: string;
@@ -64,6 +65,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
 
       if (error) throw error;
       setTypes(prev => [...prev, data]);
+      logAudit({ action: 'celebration_type_created', entity_type: 'celebration_type', entity_id: data.id, new_value: { name: data.name, icon: data.icon } });
       setNewType({ name: '', icon: '🎵' });
       setCreating(false);
       toast.success('Tipo de celebração criado.');
@@ -89,6 +91,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
       setTypes(prev => prev.map(t =>
         t.id === id ? { ...t, name: editState.name.trim(), slug, icon: editState.icon } : t
       ));
+      logAudit({ action: 'celebration_type_updated', entity_type: 'celebration_type', entity_id: id, new_value: { name: editState.name.trim(), icon: editState.icon } });
       setEditing(null);
       toast.success('Tipo atualizado.');
       router.refresh();
@@ -110,6 +113,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
       setTypes(prev => prev.map(t =>
         t.id === type.id ? { ...t, is_active: !t.is_active } : t
       ));
+      logAudit({ action: type.is_active ? 'celebration_type_deactivated' : 'celebration_type_activated', entity_type: 'celebration_type', entity_id: type.id, new_value: { name: type.name } });
       toast.success(type.is_active ? 'Tipo desativado.' : 'Tipo ativado.');
       router.refresh();
     } catch (err: any) {
@@ -134,6 +138,7 @@ export function CelebrationTypesAdminClient({ types: initial }: Props) {
 
       if (error) throw error;
       setTypes(prev => prev.filter(t => t.id !== type.id));
+      logAudit({ action: 'celebration_type_deleted', entity_type: 'celebration_type', entity_id: type.id, old_value: { name: type.name } });
       toast.success('Tipo excluído.');
       router.refresh();
     } catch (err: any) {
