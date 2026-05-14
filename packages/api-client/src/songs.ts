@@ -34,7 +34,11 @@ export async function getSongs(
   if (status) query = query.eq('status', status);
   if (key_note) query = query.eq('key_note', key_note);
   if (created_by) query = query.eq('created_by', created_by);
-  if (q) query = query.ilike('title', `%${q}%`);
+  if (q) {
+    // Busca em título, autor e trecho de letra
+    const term = q.replace(/[%_]/g, '\\$&'); // escapa caracteres especiais do LIKE
+    query = query.or(`title.ilike.%${term}%,author.ilike.%${term}%,lyrics.ilike.%${term}%`);
+  }
   if (category_id) query = query.eq('song_categories.category_id', category_id);
 
   const { data, error, count } = await query;
