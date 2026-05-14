@@ -67,11 +67,11 @@ export default async function DashboardPage() {
   const liturgiaUrl = 'https://liturgia.cancaonova.com/pb/';
 
   const quickLinks = [
-    { label: 'Nova Música',     href: '/musicas/nova',       icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
-    { label: 'Novo Repertório', href: '/repertorios/novo',   icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
     { label: 'Músicas',         href: '/musicas',             icon: Music,          color: 'text-blue-600',    bg: 'bg-blue-50',    show: true },
     { label: 'Repertórios',     href: '/repertorios',         icon: BookOpen,       color: 'text-violet-600',  bg: 'bg-violet-50',  show: true },
     { label: 'Liturgia do Dia', href: liturgiaUrl,            icon: BookMarked,     color: 'text-orange-600',  bg: 'bg-orange-50',  show: true, external: true },
+    { label: 'Nova Música',     href: '/musicas/nova',        icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
+    { label: 'Novo Repertório', href: '/repertorios/novo',    icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
     { label: 'Aprovações',      href: '/admin/aprovacoes',    icon: ClipboardCheck, color: 'text-amber-600',   bg: 'bg-amber-50',   show: can(role, 'songs:approve') },
     { label: 'Usuários',        href: '/admin/usuarios',      icon: Users,          color: 'text-rose-600',    bg: 'bg-rose-50',    show: can(role, 'users:view') },
     { label: 'Categorias',      href: '/admin/categorias',    icon: Tag,            color: 'text-teal-600',    bg: 'bg-teal-50',    show: can(role, 'categories:create') },
