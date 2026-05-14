@@ -21,6 +21,9 @@ const ACTION_LABELS: Record<string, string> = {
   repertory_created:        'Repertório criado',
   repertory_updated:        'Repertório editado',
   repertory_deleted:        'Repertório excluído',
+  // Groups
+  group_created:            'Grupo criado',
+  group_deleted:            'Grupo excluído',
   // Users / roles
   role_assigned:            'Perfil atribuído',
   role_changed:             'Perfil alterado',
@@ -41,6 +44,8 @@ const ACTION_COLORS: Record<string, string> = {
   repertory_created:        '#10B981',
   repertory_updated:        '#3B82F6',
   repertory_deleted:        '#EF4444',
+  group_created:            '#06B6D4',
+  group_deleted:            '#EF4444',
   role_assigned:            '#8B5CF6',
   role_changed:             '#8B5CF6',
   role_removed:             '#8B5CF6',
@@ -67,6 +72,9 @@ export default async function AdminLogsPage({
   const page    = Math.max(1, parseInt(rawPage ?? '1'));
   const perPage = 50;
   const from    = (page - 1) * perPage;
+
+  // Diagnóstico de variáveis de ambiente
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   // Service client bypassa RLS — usuário já foi verificado como admin acima
   const admin = createServiceClient();
@@ -115,10 +123,35 @@ export default async function AdminLogsPage({
         />
       </div>
 
-      {/* Error state */}
+      {/* Diagnóstico: variável de ambiente ausente */}
+      {!hasServiceKey && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 space-y-1">
+          <p className="font-semibold">⚠️ Variável de ambiente ausente</p>
+          <p><code className="bg-amber-100 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> não está configurada neste ambiente.</p>
+          <p className="text-amber-700">No Vercel: <strong>Settings → Environment Variables</strong> → adicione a chave encontrada em <strong>Supabase → Project Settings → API → service_role</strong>.</p>
+        </div>
+      )}
+
+      {/* Erro de query */}
       {logsError && (
-        <div className="card p-4 border border-red-100 bg-red-50 text-red-600 text-sm">
-          Erro ao carregar logs: {logsError.message}
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700 space-y-1">
+          <p className="font-semibold">Erro ao carregar logs</p>
+          <p className="font-mono text-xs">{logsError.message}</p>
+          {logsError.message?.includes('does not exist') && (
+            <p className="text-red-600 mt-2">
+              A tabela <code className="bg-red-100 px-1 rounded">audit_logs</code> não foi encontrada.
+              Execute o SQL da migration <strong>016_fix_audit_system.sql</strong> no Supabase Dashboard.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Aviso: 0 logs mas tabela ok */}
+      {!logsError && count === 0 && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700 space-y-1">
+          <p className="font-semibold">ℹ️ Nenhum evento registrado ainda</p>
+          <p>Os triggers de auditoria registram ações automaticamente quando usuários criam, editam ou excluem músicas, repertórios e grupos.</p>
+          <p className="text-blue-600">Se você já realizou ações e nada aparece, aplique o SQL <strong>016_fix_audit_system.sql</strong> no <strong>Supabase Dashboard → SQL Editor</strong> para instalar os triggers.</p>
         </div>
       )}
 
