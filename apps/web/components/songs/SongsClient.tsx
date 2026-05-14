@@ -65,54 +65,58 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
       </div>
 
       {/* Filters */}
-      <div className="card p-4 flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="card p-4 space-y-3">
+        {/* Linha 1 — busca (sempre largura total) */}
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="search"
-            placeholder="Buscar por título, autor ou trecho da letra..."
+            placeholder="Título, autor ou trecho da letra..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="input pl-9"
+            className="input pl-9 w-full"
           />
         </div>
 
-        {isAdmin && (
+        {/* Linha 2 — filtros + ordenação numa única faixa */}
+        <div className="flex items-center gap-2">
           <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value as SongStatus | ''); setPage(1); }}
-            className="input w-auto"
+            value={categoryFilter}
+            onChange={(e) => { setCategoryFilter(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
+            className="input flex-1 min-w-0 text-sm truncate"
           >
-            {statusOptions.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+            <option value="">Todas as categorias</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-        )}
 
-        <select
-          value={categoryFilter}
-          onChange={(e) => { setCategoryFilter(e.target.value ? Number(e.target.value) : ''); setPage(1); }}
-          className="input w-auto"
-        >
-          <option value="">Todas as categorias</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          {isAdmin && (
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value as SongStatus | ''); setPage(1); }}
+              className="input flex-1 min-w-0 text-sm truncate"
+            >
+              {statusOptions.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          )}
 
-        {/* Ordenação — discreta, separada à direita */}
-        <div className="flex items-center gap-1.5 ml-auto text-gray-400">
-          <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
-          <select
-            value={sort}
-            onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}
-            className="text-xs text-gray-500 bg-transparent border-none outline-none cursor-pointer hover:text-gray-700 transition-colors pr-1"
-          >
-            <option value="alpha">A → Z</option>
-            <option value="recent">Mais recentes</option>
-            <option value="oldest">Mais antigas</option>
-            <option value="updated">Atualizadas</option>
-          </select>
+          {/* Ordenação — discreta, separada por divisor */}
+          <div className="flex items-center gap-1 shrink-0 pl-2 border-l border-gray-200 text-gray-400">
+            <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}
+              className="text-xs text-gray-500 bg-transparent border-none outline-none cursor-pointer hover:text-gray-700 transition-colors"
+            >
+              <option value="alpha">A → Z</option>
+              <option value="recent">Recentes</option>
+              <option value="oldest">Antigas</option>
+              <option value="updated">Atualizadas</option>
+            </select>
+          </div>
         </div>
       </div>
 
