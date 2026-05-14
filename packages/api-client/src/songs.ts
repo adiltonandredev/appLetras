@@ -8,9 +8,17 @@ export async function getSongs(
   client: SupabaseClient,
   filters: SongFilters = {}
 ): Promise<PaginatedResponse<Song>> {
-  const { page = 1, per_page = 20, q, status, category_id, key_note, created_by } = filters;
+  const { page = 1, per_page = 20, q, status, category_id, key_note, created_by, sort = 'alpha' } = filters;
   const from = (page - 1) * per_page;
   const to = from + per_page - 1;
+
+  const sortMap: Record<string, { column: string; ascending: boolean }> = {
+    alpha:   { column: 'title',      ascending: true  },
+    recent:  { column: 'created_at', ascending: false },
+    oldest:  { column: 'created_at', ascending: true  },
+    updated: { column: 'updated_at', ascending: false },
+  };
+  const { column: orderCol, ascending: orderAsc } = sortMap[sort] ?? sortMap['alpha'];
 
   // Quando há filtro de categoria, usa INNER JOIN para excluir músicas sem ela
   const categoriesJoin = category_id
@@ -21,7 +29,7 @@ export async function getSongs(
     .from('songs')
     .select(`*, creator:users!created_by(id, full_name, avatar_url), ${categoriesJoin}`, { count: 'exact' })
     .range(from, to)
-    .order('created_at', { ascending: false });
+    .order(orderCol, { ascending: orderAsc });
 
   if (status) query = query.eq('status', status);
   if (key_note) query = query.eq('key_note', key_note);

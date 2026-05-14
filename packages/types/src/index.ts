@@ -279,6 +279,7 @@ export interface SongFilters extends PaginationParams {
   key_note?: string;
   tags?: string[];
   created_by?: string;
+  sort?: 'alpha' | 'recent' | 'oldest' | 'updated';
 }
 
 export interface RepertoryFilters extends PaginationParams {

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getSongs } from '@rl/api-client';
 import { SONG_STATUS_LABELS, SONG_STATUS_COLORS, truncate } from '@rl/utils';
 import type { LiturgicalCategory, SongStatus, UserRole } from '@rl/types';
-import { Plus, Search, Music, ExternalLink, Filter } from 'lucide-react';
+import { Plus, Search, Music, ExternalLink, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
@@ -22,16 +22,18 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<SongStatus | ''>('');
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
+  const [sort, setSort] = useState<'alpha' | 'recent' | 'oldest' | 'updated'>('alpha');
   const [page, setPage] = useState(1);
 
   const supabase = createClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['songs', search, statusFilter, categoryFilter, page],
+    queryKey: ['songs', search, statusFilter, categoryFilter, sort, page],
     queryFn: () => getSongs(supabase, {
       q: search || undefined,
       status: statusFilter || undefined,
       category_id: categoryFilter || undefined,
+      sort,
       page,
       per_page: 20,
     }),
@@ -63,7 +65,7 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
       </div>
 
       {/* Filters */}
-      <div className="card p-4 flex flex-wrap gap-3">
+      <div className="card p-4 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -97,6 +99,21 @@ export function SongsClient({ role, canCreate, canApprove, categories }: SongsCl
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+
+        {/* Ordenação — discreta, separada à direita */}
+        <div className="flex items-center gap-1.5 ml-auto text-gray-400">
+          <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+          <select
+            value={sort}
+            onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}
+            className="text-xs text-gray-500 bg-transparent border-none outline-none cursor-pointer hover:text-gray-700 transition-colors pr-1"
+          >
+            <option value="alpha">A → Z</option>
+            <option value="recent">Mais recentes</option>
+            <option value="oldest">Mais antigas</option>
+            <option value="updated">Atualizadas</option>
+          </select>
+        </div>
       </div>
 
       {/* Songs grid */}
