@@ -10,9 +10,11 @@ export async function getRepertories(
   userId: string,
   filters: RepertoryFilters = {}
 ): Promise<PaginatedResponse<Repertory>> {
-  const { page = 1, per_page = 20, q, celebration, event_date_from, event_date_to } = filters;
+  const { page = 1, per_page = 20, q, celebration, event_date_from, event_date_to, show = 'active' } = filters;
   const from = (page - 1) * per_page;
   const to = from + per_page - 1;
+
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   // A RLS já filtra os repertórios acessíveis (próprios + públicos + compartilhados).
   // Retorna apenas os criados pelo usuário aqui; shared vem por getSharedRepertories.
@@ -21,7 +23,17 @@ export async function getRepertories(
     .select(`*, creator:users!created_by(id, full_name, avatar_url)`, { count: 'exact' })
     .eq('created_by', userId)
     .range(from, to)
-    .order('event_date', { ascending: false });
+    .order('event_date', { ascending: show === 'past' ? false : true });
+
+  // Filtro temporal
+  if (show === 'active') {
+    // futuros ou sem data definida
+    query = query.or(`event_date.is.null,event_date.gte.${today}`);
+  } else if (show === 'past') {
+    // somente já realizados (têm data e ela já passou)
+    query = query.not('event_date', 'is', null).lt('event_date', today);
+  }
+  // show === 'all' → sem filtro de data
 
   if (q) query = query.ilike('title', `%${q}%`);
   if (celebration) query = query.eq('celebration', celebration);

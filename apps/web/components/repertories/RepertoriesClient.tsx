@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getRepertories, getSharedRepertories, deleteRepertory, duplicateRepertory } from '@rl/api-client';
 import { CELEBRATION_ICONS, CELEBRATION_LABELS, formatDate, can } from '@rl/utils';
 import type { Repertory, UserRole } from '@rl/types';
-import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2, Users, User } from 'lucide-react';
+import { Plus, Search, BookOpen, Calendar, Copy, Trash2, Eye, MoreVertical, Share2, Users, User, History } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
@@ -20,6 +20,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [show, setShow] = useState<'active' | 'past'>('active');
   const { confirm, ConfirmDialogNode } = useConfirm();
 
   const canCreate = can(role, 'repertories:create');
@@ -28,11 +29,20 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
+  const isHistory = show === 'past';
+
   // Usuário padrão não busca repertórios próprios (não pode criar)
   const { data, isLoading } = useQuery({
-    queryKey: ['repertories', search, page],
-    queryFn: () => getRepertories(supabase, userId, { q: search || undefined, page, per_page: 12 }),
+    queryKey: ['repertories', search, page, show],
+    queryFn: () => getRepertories(supabase, userId, { q: search || undefined, page, per_page: 12, show }),
     enabled: !isPadrao,
+  });
+
+  // Conta os passados sem trazer todos (só o total)
+  const { data: pastCount } = useQuery({
+    queryKey: ['repertories-past-count', userId],
+    queryFn: () => getRepertories(supabase, userId, { per_page: 1, page: 1, show: 'past' }),
+    enabled: !isPadrao && show === 'active',
   });
 
   const { data: shared = [], isLoading: loadingShared } = useQuery({
@@ -97,7 +107,22 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
       {/* ── Meus Repertórios — oculto para padrão ── */}
       {!isPadrao && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Meus repertórios</h2>
+          {/* Cabeçalho da seção com toggle histórico */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
+              {isHistory && <History className="w-3.5 h-3.5" />}
+              {isHistory ? 'Histórico' : 'Meus repertórios'}
+            </h2>
+            <button
+              onClick={() => { setShow(isHistory ? 'active' : 'past'); setPage(1); }}
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <History className="w-3.5 h-3.5" />
+              {isHistory
+                ? 'Ver ativos'
+                : `Histórico${(pastCount?.count ?? 0) > 0 ? ` (${pastCount?.count})` : ''}`}
+            </button>
+          </div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -111,12 +136,24 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
             </div>
           ) : data?.data.length === 0 ? (
             <div className="card p-14 text-center">
-              <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Nenhum repertório ainda</p>
-              {canCreate && (
+              {isHistory
+                ? <History className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                : <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />}
+              <p className="text-gray-500 font-medium">
+                {isHistory ? 'Nenhum repertório no histórico' : 'Nenhum repertório ainda'}
+              </p>
+              {!isHistory && canCreate && (
                 <Link href="/repertorios/novo" className="btn-primary mt-4 inline-flex">
                   <Plus className="w-4 h-4" /> Criar primeiro repertório
                 </Link>
+              )}
+              {isHistory && (
+                <button
+                  onClick={() => { setShow('active'); setPage(1); }}
+                  className="mt-3 text-xs text-brand-600 font-semibold hover:underline"
+                >
+                  ← Voltar aos ativos
+                </button>
               )}
             </div>
           ) : (
@@ -139,6 +176,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
                     if (ok) deleteMutation.mutate(rep.id);
                   }}
                   showActions
+                  isPast={isHistory}
                 />
               ))}
             </div>
@@ -203,7 +241,7 @@ export function RepertoriesClient({ userId, role }: RepertoriesClientProps) {
 }
 
 function RepertoryCard({
-  repertory, menuOpen, onMenuToggle, onDuplicate, onDelete, showActions, sharedBadge,
+  repertory, menuOpen, onMenuToggle, onDuplicate, onDelete, showActions, sharedBadge, isPast,
 }: {
   repertory: Repertory;
   menuOpen: boolean;
@@ -212,25 +250,31 @@ function RepertoryCard({
   onDelete: () => void;
   showActions: boolean;
   sharedBadge?: boolean;
+  isPast?: boolean;
 }) {
   const celebration = (repertory.celebration as any) ?? 'outro';
   const creator = (repertory as any).creator;
 
   return (
-    <div className="card overflow-hidden relative group hover:shadow-card-hover transition-all duration-200 hover:-translate-y-0.5 flex flex-col">
+    <div className={`card overflow-hidden relative group transition-all duration-200 flex flex-col ${isPast ? 'opacity-75 hover:opacity-100' : 'hover:shadow-card-hover hover:-translate-y-0.5'}`}>
 
       {/* Topo colorido com ícone */}
-      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 px-5 pt-5 pb-4 flex items-start justify-between">
+      <div className={`px-5 pt-5 pb-4 flex items-start justify-between ${isPast ? 'bg-gray-50' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">
-            <span className="text-2xl leading-none">
+            <span className={`text-2xl leading-none ${isPast ? 'grayscale' : ''}`}>
               {CELEBRATION_ICONS[celebration]}
             </span>
           </div>
           <div>
             <h3 className="font-bold text-gray-900 leading-snug text-sm">{repertory.title}</h3>
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
-              {repertory.celebration && (
+              {isPast && (
+                <span className="inline-flex items-center gap-0.5 text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+                  <History className="w-2.5 h-2.5" /> Realizado
+                </span>
+              )}
+              {!isPast && repertory.celebration && (
                 <span className="inline-flex items-center text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
                   {CELEBRATION_LABELS[repertory.celebration]}
                 </span>

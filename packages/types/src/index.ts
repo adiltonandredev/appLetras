@@ -288,6 +288,8 @@ export interface RepertoryFilters extends PaginationParams {
   event_date_from?: string;
   event_date_to?: string;
   created_by?: string;
+  /** 'active' = futuros + sem data (padrão) | 'past' = já realizados | 'all' = todos */
+  show?: 'active' | 'past' | 'all';
 }
 
 export interface UserFilters extends PaginationParams {
