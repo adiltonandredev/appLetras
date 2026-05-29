@@ -11,9 +11,10 @@ import type { Song, UserRole, SongApproval } from '@rl/types';
 import {
   ArrowLeft, Edit2, Send, Archive, Clock, User, Tag,
   Music, ChordDiagram, CheckCircle, XCircle, MessageSquare, Link2,
-  Maximize2, Minimize2, ALargeSmall, AArrowUp, AArrowDown, Trash2,
+  Maximize2, Minimize2, ALargeSmall, AArrowUp, AArrowDown, Trash2, Flag,
 } from 'lucide-react';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { ReportSongModal } from './ReportSongModal';
 
 function PlatformIcon({ url }: { url: string }) {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -94,6 +95,7 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
   const [submitting, setSubmitting] = useState(false);
   const [deletingLyrics, setDeletingLyrics] = useState(false);
   const [lyrics, setLyrics] = useState(song.lyrics);
+  const [showReport, setShowReport] = useState(false);
   const [fontSize, setFontSize] = useState(16); // px
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -158,6 +160,16 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
   return (
     <div className="max-w-4xl mx-auto space-y-5">
       {ConfirmDialogNode}
+
+      {showReport && (
+        <ReportSongModal
+          songId={song.id}
+          songTitle={song.title}
+          userId={currentUserId}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <Link href="/musicas" className="btn-ghost -ml-2">
@@ -171,6 +183,14 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
               <span className="hidden sm:inline">{submitting ? 'Enviando...' : 'Enviar para aprovação'}</span>
             </button>
           )}
+          <button
+            onClick={() => setShowReport(true)}
+            className="btn-ghost px-2.5 py-2 text-amber-500 hover:bg-amber-50 hover:text-amber-600"
+            title="Reportar problema"
+          >
+            <Flag className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs">Reportar</span>
+          </button>
           {canEdit && (
             <Link href={`/musicas/${song.id}/editar`} className="btn-secondary px-2.5 py-2 sm:px-3" title="Editar">
               <Edit2 className="w-4 h-4" />

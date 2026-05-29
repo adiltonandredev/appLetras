@@ -5,7 +5,7 @@ import { getCurrentRole } from '@/lib/auth/permissions';
 import { can } from '@rl/utils';
 import {
   Music, BookOpen, ClipboardCheck, Plus, ArrowRight,
-  Users, Tag, CalendarDays, User, ListMusic, PlusCircle, ChevronRight, BookMarked,
+  Users, Tag, CalendarDays, User, ListMusic, PlusCircle, ChevronRight, BookMarked, Flag,
 } from 'lucide-react';
 // Music, BookOpen, ClipboardCheck também usados em statsData via iconName string
 import Link from 'next/link';
@@ -74,6 +74,7 @@ export default async function DashboardPage() {
     { label: 'Nova Música',     href: '/musicas/nova',        icon: PlusCircle,     color: 'text-brand-600',   bg: 'bg-brand-50',   show: can(role, 'songs:create') },
     { label: 'Novo Repertório', href: '/repertorios/novo',    icon: ListMusic,      color: 'text-emerald-600', bg: 'bg-emerald-50', show: can(role, 'repertories:create') },
     { label: 'Aprovações',      href: '/admin/aprovacoes',    icon: ClipboardCheck, color: 'text-amber-600',   bg: 'bg-amber-50',   show: can(role, 'songs:approve') },
+    { label: 'Reportes',        href: '/admin/reportes',      icon: Flag,           color: 'text-rose-600',    bg: 'bg-rose-50',    show: can(role, 'users:view') },
     { label: 'Usuários',        href: '/admin/usuarios',      icon: Users,          color: 'text-rose-600',    bg: 'bg-rose-50',    show: can(role, 'users:view') },
     { label: 'Categorias',      href: '/admin/categorias',    icon: Tag,            color: 'text-teal-600',    bg: 'bg-teal-50',    show: can(role, 'categories:create') },
     { label: 'Celebrações',     href: '/admin/celebracoes',   icon: CalendarDays,   color: 'text-indigo-600',  bg: 'bg-indigo-50',  show: can(role, 'categories:create') },
