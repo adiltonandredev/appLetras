@@ -7,35 +7,35 @@ export const metadata = { title: 'Grupos' };
 
 export default async function GruposPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   // Grupos criados pelo usuário
   const { data: myGroups } = await supabase
     .from('teams')
     .select('*, members:team_members(count)')
-    .eq('created_by', session.user.id)
+    .eq('created_by', user.id)
     .order('created_at', { ascending: false });
 
   // Grupos onde o usuário é membro (mas não criador)
   const { data: memberOf } = await supabase
     .from('team_members')
     .select('team:teams(*, members:team_members(count))')
-    .eq('user_id', session.user.id)
-    .neq('teams.created_by', session.user.id);
+    .eq('user_id', user.id)
+    .neq('teams.created_by', user.id);
 
   const memberGroups = (memberOf ?? [])
     .map((m: any) => m.team)
     .filter(Boolean)
-    .filter((t: any) => t.created_by !== session.user.id);
+    .filter((t: any) => t.created_by !== user.id);
 
   return (
     <GruposClient
       myGroups={myGroups ?? []}
       memberGroups={memberGroups}
-      userId={session.user.id}
+      userId={user.id}
       role={role}
     />
   );

@@ -11,10 +11,10 @@ interface Props { params: { id: string } }
 
 export default async function EditSongPage({ params }: Props) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   const [songResult, categoriesResult] = await Promise.all([
     supabase
@@ -34,7 +34,7 @@ export default async function EditSongPage({ params }: Props) {
   if (songResult.error || !songResult.data) notFound();
 
   const song = songResult.data;
-  const isOwner = song.created_by === session.user.id;
+  const isOwner = song.created_by === user.id;
   const canEdit =
     (isOwner && ['draft', 'revision_requested'].includes(song.status)) ||
     can(role, 'songs:edit:any');

@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: 'Categorias — Admin' };
 
 export default async function AdminCategoriesPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
   if (!can(role, 'categories:create')) redirect('/musicas');
 
   const { data: categories } = await supabase

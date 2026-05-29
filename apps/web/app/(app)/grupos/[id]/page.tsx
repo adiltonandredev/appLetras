@@ -6,8 +6,8 @@ export const metadata = { title: 'Grupo' };
 
 export default async function GroupDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
   const { data: group } = await supabase
     .from('teams')
@@ -24,8 +24,8 @@ export default async function GroupDetailPage({ params }: { params: { id: string
   if (!group) notFound();
 
   // Verifica se o usuário é membro ou criador
-  const isMember = group.members?.some((m: any) => m.user_id === session.user.id);
-  const isOwner  = group.created_by === session.user.id;
+  const isMember = group.members?.some((m: any) => m.user_id === user.id);
+  const isOwner  = group.created_by === user.id;
   if (!isMember && !isOwner) notFound();
 
   // Repertórios compartilhados com este grupo
@@ -43,7 +43,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
     <GroupDetailClient
       group={group}
       sharedRepertories={sharedReps ?? []}
-      userId={session.user.id}
+      userId={user.id}
       isOwner={isOwner}
     />
   );

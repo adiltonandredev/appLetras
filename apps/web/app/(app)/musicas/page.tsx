@@ -8,10 +8,10 @@ export const metadata: Metadata = { title: 'Músicas' };
 
 export default async function SongsPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   const { data: categories } = await supabase
     .from('liturgical_categories')

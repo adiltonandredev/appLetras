@@ -9,7 +9,9 @@ import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') ?? '/dashboard';
+  // Sanitize redirect — only allow relative internal paths
+  const rawRedirect = searchParams.get('redirect') ?? '/dashboard';
+  const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard';
 
   // Erros vindos do callback OAuth via query param
   const urlError = searchParams.get('error');
@@ -17,6 +19,8 @@ export function LoginForm() {
     ? 'Falha ao autenticar com o Google. Verifique se o provedor está habilitado e tente novamente.'
     : urlError === 'oauth_missing_code'
     ? 'Código de autenticação ausente. Tente novamente.'
+    : urlError === 'account_disabled'
+    ? 'Sua conta foi desativada. Entre em contato com o administrador.'
     : urlError
     ? 'Erro ao autenticar. Tente novamente.'
     : null;

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth/permissions';
+import { requireAuth, getCurrentRole } from '@/lib/auth/permissions';
+import { can } from '@rl/utils';
 import { RepertoryForm } from '@/components/repertories/RepertoryForm';
 
 export const metadata: Metadata = { title: 'Editar Repertório' };
@@ -9,8 +10,9 @@ export const metadata: Metadata = { title: 'Editar Repertório' };
 interface Props { params: { id: string } }
 
 export default async function EditRepertoryPage({ params }: Props) {
-  await requireAuth();
+  const { user } = await requireAuth();
   const supabase = createClient();
+  const role = await getCurrentRole(user.id);
 
   const [repertoryResult, songsResult, categoriesResult] = await Promise.all([
     supabase
@@ -38,6 +40,12 @@ export default async function EditRepertoryPage({ params }: Props) {
   ]);
 
   if (repertoryResult.error || !repertoryResult.data) notFound();
+
+  // Authorization: only the owner or admin can edit
+  const rep = repertoryResult.data;
+  if (rep.created_by !== user.id && !can(role, 'repertories:edit:any')) {
+    redirect(`/repertorios/${params.id}`);
+  }
 
   const repertory = {
     ...repertoryResult.data,

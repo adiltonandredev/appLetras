@@ -10,10 +10,10 @@ export const metadata: Metadata = { title: 'Reportes — Admin' };
 
 export default async function AdminReportesPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
   if (!can(role, 'users:view')) redirect('/dashboard');
 
   const { data: reports, error } = await supabase
@@ -52,7 +52,7 @@ export default async function AdminReportesPage() {
 
       <SongReportsClient
         reports={(reports ?? []) as any}
-        currentUserId={session.user.id}
+        currentUserId={user.id}
       />
     </div>
   );

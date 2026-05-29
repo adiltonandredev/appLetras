@@ -18,11 +18,11 @@ export const metadata: Metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const role = await getCurrentRole(session.user.id);
-  const firstName = (session.user.user_metadata?.full_name ?? 'usuário').split(' ')[0];
+  const role = await getCurrentRole(user.id);
+  const firstName = (user.user_metadata?.full_name ?? 'usuário').split(' ')[0];
 
   const isAdmin = can(role, 'users:view');
   const isPadrao = role === 'padrao';
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   let sharedRepIds: string[] = [];
   if (isPadrao) {
     const { data: rpcResult } = await supabase
-      .rpc('get_shared_repertory_ids', { p_user_id: session.user.id });
+      .rpc('get_shared_repertory_ids', { p_user_id: user.id });
     sharedRepIds = (rpcResult ?? []).map((r: any) => r.repertory_id as string).filter(Boolean);
   }
 
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
       ? supabase.from('repertories').select('id', { count: 'exact', head: true })
       : isPadrao
         ? Promise.resolve({ count: sharedRepIds.length, error: null })
-        : supabase.from('repertories').select('id', { count: 'exact', head: true }).eq('created_by', session.user.id),
+        : supabase.from('repertories').select('id', { count: 'exact', head: true }).eq('created_by', user.id),
     can(role, 'songs:approve')
       ? supabase.from('song_approvals').select('id', { count: 'exact', head: true }).eq('status', 'pending')
       : Promise.resolve({ count: 0, error: null }),
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
         ? sharedRepIds.length > 0
           ? supabase.from('repertories').select(REP_SELECT).in('id', sharedRepIds).order('event_date', { ascending: false }).limit(4)
           : Promise.resolve({ data: [], error: null })
-        : supabase.from('repertories').select(REP_SELECT).eq('created_by', session.user.id).order('created_at', { ascending: false }).limit(4),
+        : supabase.from('repertories').select(REP_SELECT).eq('created_by', user.id).order('created_at', { ascending: false }).limit(4),
     supabase.from('songs').select('id, title, created_at, key_note').eq('status', 'approved').order('created_at', { ascending: false }).limit(4),
   ]);
 
@@ -248,13 +248,4 @@ export default async function DashboardPage() {
                 <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
               </Link>
             ))}
-          </div>
-        </div>}
-
-        {/* Músicas abertas recentemente (client-side localStorage) */}
-        {!isPadrao && <RecentlyViewedSongs />}
-
-      </div>
-    </div>
-  );
-}
+          </div

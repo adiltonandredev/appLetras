@@ -6,8 +6,11 @@ import type { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code  = requestUrl.searchParams.get('code');
-  const next  = requestUrl.searchParams.get('redirect') ?? '/dashboard';
   const origin = requestUrl.origin;
+
+  // Sanitize redirect — only allow relative internal paths
+  const rawNext = requestUrl.searchParams.get('redirect') ?? '/dashboard';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
   // Se não há código, redireciona com erro
   if (!code) {

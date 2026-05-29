@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 
 export default async function ApresentacaoPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!session) notFound();
 
   try {

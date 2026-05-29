@@ -86,10 +86,10 @@ export default async function AdminLogsPage({
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
   if (!can(role, 'admin:audit')) redirect('/musicas');
 
   // Extrair params de forma segura

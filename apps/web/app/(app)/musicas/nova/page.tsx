@@ -9,11 +9,11 @@ export default async function NewSongPage() {
   await requireRole('intermediario');
 
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const [categoriesResult, role] = await Promise.all([
     supabase.from('liturgical_categories').select('*').order('sort_order'),
-    session ? getCurrentRole(session.user.id) : Promise.resolve('padrao' as const),
+    session ? getCurrentRole(user.id) : Promise.resolve('padrao' as const),
   ]);
 
   return (

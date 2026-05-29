@@ -7,23 +7,24 @@ export { can, hasMinRole };
 
 export async function requireAuth() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  // getUser() validates JWT server-side — more secure than getSession() which reads cookies
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (error || !user) {
     redirect('/login');
   }
 
-  return session;
+  return { user: user! };
 }
 
 export async function requireRole(minRole: UserRole) {
-  const session = await requireAuth();
+  const { user } = await requireAuth();
   const supabase = createClient();
 
   const { data: assignment } = await supabase
     .from('user_role_assignments')
     .select('role:roles(name)')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single();
 
   const role = (assignment?.role as any)?.name as UserRole ?? 'padrao';
@@ -32,7 +33,7 @@ export async function requireRole(minRole: UserRole) {
     redirect('/dashboard?error=unauthorized');
   }
 
-  return { session, role };
+  return { session: { user }, role };
 }
 
 export async function getCurrentRole(userId: string): Promise<UserRole> {

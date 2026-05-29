@@ -7,10 +7,10 @@ export const metadata: Metadata = { title: 'Repertórios' };
 
 export default async function RepertoriesPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
-  return <RepertoriesClient userId={session.user.id} role={role} />;
+  return <RepertoriesClient userId={user.id} role={role} />;
 }

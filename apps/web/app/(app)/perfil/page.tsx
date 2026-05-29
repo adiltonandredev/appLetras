@@ -9,26 +9,26 @@ export const metadata: Metadata = { title: 'Meu Perfil — APPLetras' };
 
 export default async function PerfilPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   const { data: profile } = await supabase
     .from('users')
     .select('id, full_name, email, avatar_url, created_at, last_login_at')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   const { data: stats } = await supabase
     .from('songs')
     .select('id', { count: 'exact', head: true })
-    .eq('created_by', session.user.id);
+    .eq('created_by', user.id);
 
   const { data: repStats } = await supabase
     .from('repertories')
     .select('id', { count: 'exact', head: true })
-    .eq('created_by', session.user.id);
+    .eq('created_by', user.id);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -37,7 +37,7 @@ export default async function PerfilPage() {
         <p className="text-gray-500 text-sm mt-1">Gerencie suas informações pessoais e senha.</p>
       </div>
       <PerfilClient
-        profile={profile ?? { id: session.user.id, full_name: '', email: session.user.email ?? '', avatar_url: null, created_at: '', last_login_at: null }}
+        profile={profile ?? { id: user.id, full_name: '', email: user.email ?? '', avatar_url: null, created_at: '', last_login_at: null }}
         role={role}
         roleLabel={ROLE_LABELS[role] ?? role}
         songCount={(stats as any)?.count ?? 0}

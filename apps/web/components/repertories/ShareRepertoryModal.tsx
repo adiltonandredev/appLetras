@@ -128,7 +128,12 @@ export function ShareRepertoryModal({ repertoryId, repertoryTitle, userId, onClo
   }
 
   async function removeShare(shareId: string) {
-    const { error } = await supabase.from('shared_repertories').delete().eq('id', shareId);
+    // shared_by = userId ensures only the creator of the share can remove it (enforced by RLS too)
+    const { error } = await supabase
+      .from('shared_repertories')
+      .delete()
+      .eq('id', shareId)
+      .eq('shared_by', userId);
     if (error) { toast.error('Erro ao remover.'); return; }
     toast.success('Compartilhamento removido.');
     await loadShares();

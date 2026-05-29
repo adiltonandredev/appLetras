@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: 'Usuários — Admin' };
 
 export default async function AdminUsersPage() {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
   if (!can(role, 'users:view')) redirect('/musicas');
 
   const admin = createServiceClient();
@@ -74,7 +74,7 @@ export default async function AdminUsersPage() {
       <UsersAdminClient
         users={normalized as any}
         roles={(roles ?? []).map((r: any) => ({ ...r, id: String(r.id) }))}
-        currentUserId={session.user.id}
+        currentUserId={user.id}
         canDelete={can(role, 'users:delete')}
       />
     </div>

@@ -14,10 +14,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SongPage({ params }: Props) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   const { data: song, error } = await supabase
     .from('songs')
@@ -49,7 +49,7 @@ export default async function SongPage({ params }: Props) {
     <SongDetail
       song={normalized as any}
       role={role}
-      currentUserId={session.user.id}
+      currentUserId={user.id}
       latestApproval={approval as any}
     />
   );

@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RepertoryPage({ params }: Props) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
 
   const { data: repertory, error } = await supabase
     .from('repertories')
@@ -56,14 +56,14 @@ export default async function RepertoryPage({ params }: Props) {
       })),
   };
 
-  const isOwner = repertory.created_by === session.user.id;
+  const isOwner = repertory.created_by === user.id;
 
   return (
     <RepertoryView
       repertory={normalized as any}
       role={role}
       isOwner={isOwner}
-      userId={session.user.id}
+      userId={user.id}
     />
  
   );

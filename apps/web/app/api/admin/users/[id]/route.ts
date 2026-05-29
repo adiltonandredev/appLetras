@@ -8,18 +8,18 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!session) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
-  const role = await getCurrentRole(session.user.id);
+  const role = await getCurrentRole(user.id);
   if (!can(role, 'users:delete')) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
   }
 
-  if (params.id === session.user.id) {
+  if (params.id === user.id) {
     return NextResponse.json(
       { error: 'Você não pode excluir sua própria conta.' },
       { status: 400 }
