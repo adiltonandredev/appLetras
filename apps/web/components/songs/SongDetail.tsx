@@ -116,24 +116,24 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
     });
   }, [song.id]);
 
-  async function handleDeleteLyrics() {
+  async function handleDeleteSong() {
     const ok = await confirm({
-      title: 'Excluir letra',
-      message: `A letra de "${song.title}" será removida permanentemente. A música continuará cadastrada, mas sem letra.`,
-      confirmLabel: 'Excluir letra',
+      title: 'Excluir música',
+      message: `"${song.title}" será excluída permanentemente — título, intérprete, letra, cifra e todos os dados associados. Esta ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir música',
       variant: 'danger',
       icon: 'trash',
     });
     if (!ok) return;
     setDeletingLyrics(true);
     try {
-      const { error } = await supabase.from('songs').update({ lyrics: '' }).eq('id', song.id);
+      const { error } = await supabase.from('songs').delete().eq('id', song.id);
       if (error) throw error;
-      setLyrics('');
-      logAudit({ action: 'song_lyrics_deleted', entity_type: 'song', entity_id: song.id, old_value: { title: song.title } });
-      toast.success('Letra excluída.');
+      logAudit({ action: 'song_deleted', entity_type: 'song', entity_id: song.id, old_value: { title: song.title, author: song.author } });
+      toast.success('Música excluída.');
+      router.push('/musicas');
     } catch (err: any) {
-      toast.error('Erro ao excluir letra: ' + err.message);
+      toast.error('Erro ao excluir música: ' + err.message);
     } finally {
       setDeletingLyrics(false);
     }
@@ -177,15 +177,15 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
               <span className="hidden sm:inline">Editar</span>
             </Link>
           )}
-          {role === 'administrador' && lyrics && lyrics.trim() !== '' && (
+          {role === 'administrador' && (
             <button
-              onClick={handleDeleteLyrics}
+              onClick={handleDeleteSong}
               disabled={deletingLyrics}
               className="btn-ghost px-2.5 py-2 text-red-500 hover:bg-red-50 hover:text-red-600"
-              title="Excluir letra"
+              title="Excluir música"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">Excluir letra</span>
+              <span className="hidden sm:inline text-xs">Excluir</span>
             </button>
           )}
         </div>
