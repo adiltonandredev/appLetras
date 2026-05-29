@@ -193,6 +193,7 @@ export function SongForm({ categories, mode, song, userRole }: SongFormProps) {
           logAudit({ action: 'song_created', entity_type: 'song', entity_id: created.id, new_value: { title: created.title, status: 'draft' } });
           toast.success('Música salva como rascunho!');
         }
+        router.refresh();
         router.push(`/musicas/${created.id}`);
       } else if (song) {
         await updateSong(supabase, song.id, payload, user.id);
@@ -210,6 +211,7 @@ export function SongForm({ categories, mode, song, userRole }: SongFormProps) {
           logAudit({ action: 'song_updated', entity_type: 'song', entity_id: song.id, old_value: { title: song.title }, new_value: { title: data.title } });
           toast.success('Música atualizada!');
         }
+        router.refresh();
         router.push(`/musicas/${song.id}`);
       }
     } catch (error: any) {

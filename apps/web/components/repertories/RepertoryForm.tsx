@@ -214,6 +214,7 @@ export function RepertoryForm({ songs, categories = [], mode, repertory }: Reper
       }
 
       toast.success(mode === 'create' ? 'Repertório criado!' : 'Repertório atualizado!');
+      router.refresh();
       router.push(`/repertorios/${repId}`);
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + err.message);
