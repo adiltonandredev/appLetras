@@ -127,9 +127,9 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
     if (!ok) return;
     setDeletingLyrics(true);
     try {
-      const { error } = await supabase.from('songs').update({ lyrics: null }).eq('id', song.id);
+      const { error } = await supabase.from('songs').update({ lyrics: '' }).eq('id', song.id);
       if (error) throw error;
-      setLyrics(null as any);
+      setLyrics('');
       logAudit({ action: 'song_lyrics_deleted', entity_type: 'song', entity_id: song.id, old_value: { title: song.title } });
       toast.success('Letra excluída.');
     } catch (err: any) {
@@ -177,7 +177,7 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
               <span className="hidden sm:inline">Editar</span>
             </Link>
           )}
-          {role === 'administrador' && lyrics && (
+          {role === 'administrador' && lyrics && lyrics.trim() !== '' && (
             <button
               onClick={handleDeleteLyrics}
               disabled={deletingLyrics}
@@ -355,7 +355,7 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
             </p>
           )}
           {tab === 'lyrics' ? (
-            lyrics
+            lyrics && lyrics.trim() !== ''
               ? <LyricsRenderer lyrics={lyrics} fontSize={fontSize} />
               : <p className="text-gray-400 text-sm italic">Letra não cadastrada para esta música.</p>
           ) : song.chords ? (
