@@ -52,10 +52,10 @@ export const SONG_STATUS_COLORS: Record<SongStatus, string> = {
 };
 
 export const KEY_NOTES = [
-  'Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#',
-  'Sol', 'Sol#', 'Lá', 'Lá#', 'Si',
-  'Dóm', 'Dó#m', 'Rém', 'Ré#m', 'Mim', 'Fám', 'Fá#m',
-  'Solm', 'Sol#m', 'Lám', 'Lá#m', 'Sim',
+  // Maiores
+  'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B',
+  // Menores
+  'Cm', 'C#m', 'Dbm', 'Dm', 'D#m', 'Ebm', 'Em', 'Fm', 'F#m', 'Gbm', 'Gm', 'G#m', 'Abm', 'Am', 'A#m', 'Bbm', 'Bm',
 ];
 
 // ─── Celebration helpers ──────────────────────────────────────────────────────
