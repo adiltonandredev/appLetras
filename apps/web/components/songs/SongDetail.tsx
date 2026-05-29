@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { submitSongForReview } from '@rl/api-client';
+import { logAudit } from '@/lib/audit-client';
 import { SONG_STATUS_LABELS, SONG_STATUS_COLORS, ROLE_LABELS, can, formatDateTime, timeAgo } from '@rl/utils';
 import type { Song, UserRole, SongApproval } from '@rl/types';
 import {
   ArrowLeft, Edit2, Send, Archive, Clock, User, Tag,
   Music, ChordDiagram, CheckCircle, XCircle, MessageSquare, Link2,
-  Maximize2, Minimize2, ALargeSmall, AArrowUp, AArrowDown,
+  Maximize2, Minimize2, ALargeSmall, AArrowUp, AArrowDown, Trash2,
 } from 'lucide-react';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 
 function PlatformIcon({ url }: { url: string }) {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -55,11 +57,43 @@ interface SongDetailProps {
   latestApproval?: SongApproval | null;
 }
 
+// Tipos para histórico de músicas abertas (localStorage)
+export interface RecentSongEntry {
+  id: string;
+  title: string;
+  author?: string;
+  key_note?: string;
+  viewed_at: string;
+}
+
+const LS_KEY = 'rl_recently_viewed_songs';
+const MAX_RECENT = 8;
+
+export function saveRecentSong(song: RecentSongEntry) {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const list: RecentSongEntry[] = raw ? JSON.parse(raw) : [];
+    const filtered = list.filter(s => s.id !== song.id);
+    const updated = [song, ...filtered].slice(0, MAX_RECENT);
+    localStorage.setItem(LS_KEY, JSON.stringify(updated));
+  } catch { /* silencioso */ }
+}
+
+export function loadRecentSongs(): RecentSongEntry[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
 export function SongDetail({ song, role, currentUserId, latestApproval }: SongDetailProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { confirm, ConfirmDialogNode } = useConfirm();
   const [tab, setTab] = useState<'lyrics' | 'chords'>('lyrics');
   const [submitting, setSubmitting] = useState(false);
+  const [deletingLyrics, setDeletingLyrics] = useState(false);
+  const [lyrics, setLyrics] = useState(song.lyrics);
   const [fontSize, setFontSize] = useState(16); // px
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -70,6 +104,40 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
   const isOwner = song.created_by === currentUserId;
   const canEdit = (isOwner && ['draft', 'revision_requested'].includes(song.status)) || can(role, 'songs:edit:any');
   const canSubmit = isOwner && ['draft', 'revision_requested'].includes(song.status);
+
+  // Salva no histórico de visualizações ao abrir
+  useEffect(() => {
+    saveRecentSong({
+      id: song.id,
+      title: song.title,
+      author: song.author ?? undefined,
+      key_note: song.key_note ?? undefined,
+      viewed_at: new Date().toISOString(),
+    });
+  }, [song.id]);
+
+  async function handleDeleteLyrics() {
+    const ok = await confirm({
+      title: 'Excluir letra',
+      message: `A letra de "${song.title}" será removida permanentemente. A música continuará cadastrada, mas sem letra.`,
+      confirmLabel: 'Excluir letra',
+      variant: 'danger',
+      icon: 'trash',
+    });
+    if (!ok) return;
+    setDeletingLyrics(true);
+    try {
+      const { error } = await supabase.from('songs').update({ lyrics: null }).eq('id', song.id);
+      if (error) throw error;
+      setLyrics(null as any);
+      logAudit({ action: 'song_lyrics_deleted', entity_type: 'song', entity_id: song.id, old_value: { title: song.title } });
+      toast.success('Letra excluída.');
+    } catch (err: any) {
+      toast.error('Erro ao excluir letra: ' + err.message);
+    } finally {
+      setDeletingLyrics(false);
+    }
+  }
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -89,6 +157,7 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
+      {ConfirmDialogNode}
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <Link href="/musicas" className="btn-ghost -ml-2">
@@ -107,6 +176,17 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
               <Edit2 className="w-4 h-4" />
               <span className="hidden sm:inline">Editar</span>
             </Link>
+          )}
+          {role === 'administrador' && lyrics && (
+            <button
+              onClick={handleDeleteLyrics}
+              disabled={deletingLyrics}
+              className="btn-ghost px-2.5 py-2 text-red-500 hover:bg-red-50 hover:text-red-600"
+              title="Excluir letra"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline text-xs">Excluir letra</span>
+            </button>
           )}
         </div>
       </div>
@@ -275,7 +355,9 @@ export function SongDetail({ song, role, currentUserId, latestApproval }: SongDe
             </p>
           )}
           {tab === 'lyrics' ? (
-            <LyricsRenderer lyrics={song.lyrics} fontSize={fontSize} />
+            lyrics
+              ? <LyricsRenderer lyrics={lyrics} fontSize={fontSize} />
+              : <p className="text-gray-400 text-sm italic">Letra não cadastrada para esta música.</p>
           ) : song.chords ? (
             <pre
               className="text-gray-700 whitespace-pre-wrap font-mono leading-relaxed"

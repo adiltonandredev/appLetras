@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { formatDate, timeAgo, CELEBRATION_ICONS, CELEBRATION_LABELS } from '@rl/utils';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import type { StatItem } from '@/components/dashboard/DashboardStats';
+import { RecentlyViewedSongs } from '@/components/dashboard/RecentlyViewedSongs';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -140,7 +141,7 @@ export default async function DashboardPage() {
       {!isPadrao && <DashboardStats stats={statsData} />}
 
       {/* ── Recentes ─────────────────────────────── */}
-      <div className={`grid grid-cols-1 gap-4 ${!isPadrao ? 'lg:grid-cols-2' : ''}`}>
+      <div className={`grid grid-cols-1 gap-4 ${!isPadrao ? 'lg:grid-cols-3' : ''}`}>
 
         <div className="card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -248,6 +249,9 @@ export default async function DashboardPage() {
             ))}
           </div>
         </div>}
+
+        {/* Músicas abertas recentemente (client-side localStorage) */}
+        {!isPadrao && <RecentlyViewedSongs />}
 
       </div>
     </div>
