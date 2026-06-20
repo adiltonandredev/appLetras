@@ -5,11 +5,17 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PUBLIC_ROUTES = ['/login', '/registro', '/recuperar-senha', '/redefinir-senha', '/auth'];
 
 export async function middleware(request: NextRequest) {
+  // Se as variáveis de ambiente não estiverem configuradas, deixa passar
+  // (evita crash em preview deployments sem env vars)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -29,23 +35,43 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
   const { pathname } = request.nextUrl;
   const isPublicRoute = PUBLIC_ROUTES.some(r => pathname.startsWith(r));
 
-  // Redirect unauthenticated users to login
-  if (!session && !isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
-  }
+  try {
+    // Usa getSession() com race contra timeout de 1s para não travar o middleware
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise<{ data: { session: null } }>(resolve =>
+      setTimeout(() => resolve({ data: { session: null } }), 1000)
+    );
 
-  // Redirect authenticated users away from auth pages
-  if (session && isPublicRoute && !pathname.startsWith('/auth')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+
+    // Redirect unauthenticated users to login
+    if (!session && !isPublicRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      const rawRedirect = pathname;
+      if (rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')) {
+        url.searchParams.set('redirect', rawRedirect);
+      }
+      return NextResponse.redirect(url);
+    }
+
+    // Redirect authenticated users away from auth pages
+    if (session && isPublicRoute && !pathname.startsWith('/auth')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+  } catch {
+    // Em caso de erro (Supabase offline, etc.), deixa passar para a rota
+    // O layout server-side fará a verificação real de autenticação
+    if (!isPublicRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
