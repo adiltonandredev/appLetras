@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
+import { SupabaseProvider } from '@/lib/supabase/provider';
 import { useAuthStore } from '@/stores/auth.store';
 import { syncDelta } from '@/lib/offline/sync';
 import * as Network from 'expo-network';
@@ -66,8 +67,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="auto" />
-          <AuthGuard />
+          <SupabaseProvider>
+            <StatusBar style="auto" />
+            <AuthGuard />
+          </SupabaseProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

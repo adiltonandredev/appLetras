@@ -149,7 +149,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={() => router.push('/recuperar-senha')} style={{ marginTop: 8, alignSelf: 'flex-end' }}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/recuperar-senha')} style={{ marginTop: 8, alignSelf: 'flex-end' }}>
               <Text style={styles.forgotText}>Esqueci minha senha</Text>
             </TouchableOpacity>
           </View>
@@ -169,7 +169,7 @@ export default function LoginScreen() {
           {/* Register */}
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Não tem conta? </Text>
-            <TouchableOpacity onPress={() => router.push('/registro')}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/registro')}>
               <Text style={styles.registerLink}>Criar conta</Text>
             </TouchableOpacity>
           </View>

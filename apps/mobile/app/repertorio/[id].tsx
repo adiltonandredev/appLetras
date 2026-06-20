@@ -67,7 +67,8 @@ export default function RepertorioDetailScreen() {
     if (!repertory) return;
     setSaving(true);
     try {
-      await saveRepertoryOffline(repertory as any);
+      // saveRepertoryOffline exige (id, data) — bug corrigido
+      saveRepertoryOffline((repertory as any).id, repertory as any);
       setSavedOffline(true);
       Alert.alert('✅ Salvo offline', 'Este repertório está disponível sem internet.');
     } catch (e) {
@@ -96,8 +97,9 @@ export default function RepertorioDetailScreen() {
     );
   }
 
-  const icon = CELEBRATION_ICONS[repertory.celebration_type] ?? '🎵';
-  const celebrationLabel = CELEBRATION_LABELS[repertory.celebration_type] ?? repertory.celebration_type;
+  // campo correto é 'celebration', não 'celebration_type'
+  const icon = CELEBRATION_ICONS[(repertory as any).celebration] ?? '🎵';
+  const celebrationLabel = CELEBRATION_LABELS[(repertory as any).celebration] ?? (repertory as any).celebration ?? '';
 
   return (
     <>
@@ -128,10 +130,11 @@ export default function RepertorioDetailScreen() {
           <Text style={styles.celebrationType}>{celebrationLabel}</Text>
 
           <View style={styles.metaRow}>
-            {repertory.date && (
+            {/* campo correto é 'event_date', não 'date' */}
+            {(repertory as any).event_date && (
               <View style={styles.metaChip}>
                 <Ionicons name="calendar-outline" size={13} color="#6B7280" />
-                <Text style={styles.metaChipText}>{formatDate(repertory.date)}</Text>
+                <Text style={styles.metaChipText}>{formatDate((repertory as any).event_date)}</Text>
               </View>
             )}
             {repertory.community && (
@@ -148,8 +151,8 @@ export default function RepertorioDetailScreen() {
             </View>
           </View>
 
-          {repertory.notes && (
-            <Text style={styles.notes}>{repertory.notes}</Text>
+          {(repertory as any).observations && (
+            <Text style={styles.notes}>{(repertory as any).observations}</Text>
           )}
         </View>
 

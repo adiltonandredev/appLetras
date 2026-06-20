@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSupabase } from '@/lib/supabase/provider';
 import { getAllOfflineRepertories } from '@/lib/db';
 import { CELEBRATION_ICONS, CELEBRATION_LABELS, formatDate } from '@rl/utils';
-import type { Repertory } from '@rl/types';
 
 function RepertoryCard({ item, onPress }: { item: any; onPress: () => void }) {
-  const icon = CELEBRATION_ICONS[item.celebration_type] ?? '🎵';
-  const label = CELEBRATION_LABELS[item.celebration_type] ?? item.celebration_type;
+  // campo correto é 'celebration', não 'celebration_type'
+  const icon = CELEBRATION_ICONS[item.celebration] ?? '🎵';
+  const label = CELEBRATION_LABELS[item.celebration] ?? item.celebration ?? '';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
@@ -33,10 +33,11 @@ function RepertoryCard({ item, onPress }: { item: any; onPress: () => void }) {
       </View>
 
       <View style={styles.cardFooter}>
-        {item.date && (
+        {/* campo correto é 'event_date', não 'date' */}
+        {item.event_date && (
           <View style={styles.metaChip}>
             <Ionicons name="calendar-outline" size={12} color="#6B7280" />
-            <Text style={styles.metaChipText}>{formatDate(item.date)}</Text>
+            <Text style={styles.metaChipText}>{formatDate(item.event_date)}</Text>
           </View>
         )}
         {item.community && (
@@ -58,7 +59,7 @@ function RepertoryCard({ item, onPress }: { item: any; onPress: () => void }) {
 
 export default function RepertoriosScreen() {
   const router = useRouter();
-  const { supabase, session } = useSupabase();
+  const { supabase } = useSupabase();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'online' | 'offline'>('online');
 
@@ -67,11 +68,8 @@ export default function RepertoriosScreen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('repertories')
-        .select(`
-          *,
-          items:repertory_items(id)
-        `)
-        .order('date', { ascending: false })
+        .select('id, title, celebration, event_date, community, created_at, items:repertory_items(id)')
+        .order('event_date', { ascending: false, nullsFirst: false })
         .limit(50);
       if (error) throw error;
       return data ?? [];
@@ -95,12 +93,7 @@ export default function RepertoriosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Repertórios</Text>
-      </View>
-
-      {/* Tabs */}
+      {/* Tabs online/offline */}
       <View style={styles.tabs}>
         {(['online', 'offline'] as const).map(t => (
           <TouchableOpacity
@@ -178,21 +171,14 @@ export default function RepertoriosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: {
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingBottom: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
   tabs: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingVertical: 10,
     gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
   tab: {
     flexDirection: 'row',

@@ -103,11 +103,6 @@ export default function MusicasScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Músicas</Text>
-      </View>
-
       {/* Search */}
       <View style={styles.searchContainer}>
         <Ionicons name="search-outline" size={16} color="#9CA3AF" style={styles.searchIcon} />
@@ -188,15 +183,6 @@ export default function MusicasScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: {
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingBottom: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
